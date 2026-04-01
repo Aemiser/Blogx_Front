@@ -1,0 +1,142 @@
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: $bg-card;
+  border-bottom: 1px solid $border-light;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  padding: 0 $space-6;
+  transition: box-shadow $duration-fast;
+  
+  &.scrolled {
+    box-shadow: $shadow-md;
+  }
+  
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: $space-6;
+  }
+  
+  &__center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 0 $space-8;
+  }
+  
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: $space-4;
+  }
+}
+
+.app-main {
+  flex: 1;
+  margin-top: 64px;
+  padding: $space-6 0;
+}
+
+.app-container {
+  max-width: $container-xl;
+  margin: 0 auto;
+  padding: 0 $space-6;
+}
+
+.app-content {
+  display: flex;
+  gap: $space-6;
+  
+  &__main {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  &__sidebar {
+    width: $sidebar-width;
+    flex-shrink: 0;
+  }
+}
+
+.app-footer {
+  background: $bg-card;
+  border-top: 1px solid $border-light;
+  padding: $space-8 0;
+  margin-top: auto;
+  
+  &__content {
+    max-width: $container-xl;
+    margin: 0 auto;
+    padding: 0 $space-6;
+    text-align: center;
+    color: $text-tertiary;
+    font-size: $text-sm;
+  }
+  
+  &__links {
+    display: flex;
+    justify-content: center;
+    gap: $space-4;
+    margin-bottom: $space-4;
+    
+    a {
+      color: $text-secondary;
+      transition: color $duration-fast;
+      
+      &:hover {
+        color: $primary;
+      }
+    }
+  }
+}
+
+// 深色主题
+[data-theme="dark"] {
+  .app-header {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+  }
+  
+  .app-footer {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+  }
+}
+
+// 响应式
+@media (max-width: $breakpoint-lg) {
+  .app-content__sidebar {
+    display: none;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .app-header {
+    height: 56px;
+    padding: 0 $space-4;
+    
+    &__center {
+      padding: 0 $space-4;
+    }
+  }
+  
+  .app-main {
+    margin-top: 56px;
+    padding: $space-4 0;
+  }
+  
+  .app-container {
+    padding: 0 $space-4;
+  }
+}

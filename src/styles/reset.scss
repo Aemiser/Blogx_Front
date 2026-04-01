@@ -1,0 +1,92 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: $font-family-primary;
+  color: $text-primary;
+  background-color: $bg-secondary;
+  line-height: $line-height-normal;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+input,
+textarea {
+  font-family: inherit;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+// 深色主题
+[data-theme="dark"] {
+  body {
+    color: $dark-text-primary;
+    background-color: $dark-bg-primary;
+  }
+}
+
+// 滚动条样式
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $border-dark;
+  border-radius: $radius-full;
+  
+  &:hover {
+    background: $text-quaternary;
+  }
+}
+
+// NProgress 样式
+#nprogress {
+  .bar {
+    background: $primary !important;
+  }
+  
+  .peg {
+    box-shadow: 0 0 10px $primary, 0 0 5px $primary !important;
+  }
+}
+
+// 高亮样式
+em.highlight {
+  font-style: normal;
+  color: $accent;
+  background: rgba($accent, 0.1);
+  padding: 0 2px;
+  border-radius: 2px;
+}

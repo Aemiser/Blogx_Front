@@ -1,0 +1,44 @@
+<template>
+  <button class="create-btn" @click="handleCreate">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    <span>写文章</span>
+  </button>
+</template>
+
+<script setup lang="ts">
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+function handleCreate() {
+  router.push('/editor')
+}
+</script>
+
+<style scoped lang="scss">
+.create-btn {
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+  height: 32px;
+  padding: 0 $space-3;
+  background: $accent;
+  color: white;
+  border-radius: $radius-md;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  transition: all $duration-fast;
+  
+  &:hover {
+    background: $accent-dark;
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+</style>
