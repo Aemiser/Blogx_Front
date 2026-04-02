@@ -1,0 +1,152 @@
+/* ============================================================================
+ * 代码块背景透明化样式
+ * 将文章详情页中代码块的深色背景修改为透明
+ * ============================================================================ */
+
+/* 方法一：针对 v-md-editor GitHub 主题 */
+.article-preview .v-md-editor__main {
+  /* 代码块外部容器背景透明 */
+  background: transparent !important;
+}
+
+.article-preview .v-md-pre {
+  /* 代码块背景透明 */
+  background: transparent !important;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.article-preview .v-md-pre pre {
+  /* pre 标签背景透明 */
+  background: transparent !important;
+}
+
+.article-preview .v-md-pre code {
+  /* code 标签背景透明 */
+  background: transparent !important;
+  color: inherit;
+}
+
+/* 方法二：针对代码块的黑色背景容器（从截图看是深色背景） */
+.article-preview .v-md-editor-vue,
+.article-preview .v-md-editor,
+.article-preview .v-md-editor__main {
+  background: transparent !important;
+}
+
+/* 代码块外层容器（带红绿黄圆点的那个框） */
+.article-preview .v-md-pre-wrapper,
+.article-preview .v-md-pre {
+  background: transparent !important;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+/* 移除代码块头部（语言标识、复制按钮区域）的背景 */
+.article-preview .vmd-editor-code__header,
+.article-preview .v-md-editor-code__header {
+  background: transparent !important;
+  border-bottom: none;
+}
+
+/* 代码行背景 */
+.article-preview .v-md-editor-code__line {
+  background: transparent !important;
+}
+
+/* 奇偶行背景（如果有） */
+.article-preview .v-md-editor-code__line:nth-child(odd),
+.article-preview .v-md-editor-code__line:nth-child(even) {
+  background: transparent !important;
+}
+
+/* 行号区域背景 */
+.article-preview .v-md-editor-code__line-number {
+  background: transparent !important;
+  color: #6e7781;
+}
+
+/* ============================================================================
+ * 深色主题适配（如果您的网站支持深色模式）
+ * ============================================================================ */
+.dark .article-preview .v-md-pre,
+.dark .article-preview .v-md-pre-wrapper,
+.dark .article-preview .v-md-editor__main {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================================
+ * 简洁方案：一次性覆盖所有可能的背景元素
+ * ============================================================================ */
+.article-preview [class*="v-md"] {
+  /* 只针对 v-md-editor 相关元素设置背景透明 */
+}
+
+.article-preview .v-md-pre-wrapper,
+.article-preview .v-md-pre,
+.article-preview pre,
+.article-preview code,
+.article-preview .v-md-editor__main,
+.article-preview .vmd-editor-code__header,
+.article-preview .v-md-editor-code__line,
+.article-preview .v-md-editor-code__line-number {
+  background: transparent !important;
+}
+
+/* 保持代码语法高亮颜色可见 */
+.article-preview .v-md-pre code .hljs-keyword,
+.article-preview .v-md-pre code .hljs-built_in,
+.article-preview .v-md-pre code .hljs-type,
+.article-preview .v-md-pre code .hljs-literal,
+.article-preview .v-md-pre code .hljs-params {
+  /* 关键字颜色 - 保持可见 */
+  color: #d73a49;
+}
+
+.article-preview .v-md-pre code .hljs-string,
+.article-preview .v-md-pre code .hljs-doctag {
+  /* 字符串颜色 - 保持可见 */
+  color: #032f62;
+}
+
+.article-preview .v-md-pre code .hljs-comment {
+  /* 注释颜色 - 保持可见 */
+  color: #6a737d;
+}
+
+.article-preview .v-md-pre code .hljs-function,
+.article-preview .v-md-pre code .hljs-title {
+  /* 函数名颜色 - 保持可见 */
+  color: #6f42c1;
+}
+
+/* ============================================================================
+ * 深色主题语法高亮颜色（如果需要深色背景但想保留语法高亮）
+ * ============================================================================ */
+.dark .article-preview .v-md-pre code .hljs-keyword,
+.dark .article-preview .v-md-pre code .hljs-built_in,
+.dark .article-preview .v-md-pre code .hljs-type,
+.dark .article-preview .v-md-pre code .hljs-literal {
+  color: #ff7b72;
+}
+
+.dark .article-preview .v-md-pre code .hljs-string,
+.dark .article-preview .v-md-pre code .hljs-doctag {
+  color: #a5d6ff;
+}
+
+.dark .article-preview .v-md-pre code .hljs-comment {
+  color: #8b949e;
+}
+
+.dark .article-preview .v-md-pre code .hljs-function,
+.dark .article-preview .v-md-pre code .hljs-title {
+  color: #d2a8ff;
+}
+
+.dark .article-preview .v-md-pre code,
+.dark .article-preview .v-md-pre {
+  color: #c9d1d9;
+}
