@@ -1,0 +1,129 @@
+/* ============================================================================
+ * 代码块背景透明化 - 全局样式覆盖
+ * 将此文件引入到文章详情页或全局样式中
+ * ============================================================================ */
+
+/* 方法一：简洁方案 - 直接覆盖所有可能的深色背景 */
+.article-content .code-block,
+.article-preview .code-block,
+.code-block {
+  background: transparent !important;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+}
+
+/* 代码块头部 */
+.code-block .code-block-header,
+.code-block-header {
+  background: transparent !important;
+  border-bottom-color: #e1e4e8 !important;
+}
+
+/* 代码主体 */
+.code-block .code-block-body,
+.code-block-body {
+  background: transparent !important;
+}
+
+/* 行号区域 */
+.code-block .line-numbers,
+.code-block .line-numbers {
+  background: transparent !important;
+  border-right-color: #e1e4e8 !important;
+}
+
+/* 代码内容 */
+.code-block pre,
+.code-block code {
+  background: transparent !important;
+  color: #24292e !important;
+}
+
+/* 行内代码 */
+.article-content code:not(pre code),
+.article-preview code:not(pre code) {
+  background: rgba(27, 31, 35, 0.06) !important;
+  color: #d73a49 !important;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* 深色模式覆盖 */
+.dark .code-block,
+.dark .article-content .code-block {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .code-block .code-block-header {
+  background: transparent !important;
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .code-block .line-numbers {
+  background: transparent !important;
+  border-right-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .code-block pre,
+.dark .code-block code {
+  color: #c9d1d9 !important;
+}
+
+.dark .code-block .language-badge {
+  background: rgba(137, 180, 250, 0.15);
+  color: #89b4fa;
+}
+
+.dark .code-block .header-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #8b949e;
+}
+
+.dark .code-block .header-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #c9d1d9;
+}
+
+.dark .code-block .line-number {
+  color: #6e7781;
+}
+
+/* 深色模式语法高亮 */
+.dark .code-block .hljs-comment { color: #8b949e; }
+.dark .code-block .hljs-keyword { color: #ff7b72; }
+.dark .code-block .hljs-string { color: #a5d6ff; }
+.dark .code-block .hljs-number { color: #79c0ff; }
+.dark .code-block .hljs-function { color: #d2a8ff; }
+.dark .code-block .hljs-title { color: #d2a8ff; }
+.dark .code-block .hljs-built_in { color: #ffa657; }
+.dark .code-block .hljs-type { color: #ffa657; }
+.dark .code-block .hljs-attr { color: #79c0ff; }
+.dark .code-block .hljs-meta { color: #79c0ff; }
+
+/* v-md-editor 代码块覆盖（如果仍在使用） */
+.v-md-pre-wrapper,
+.v-md-pre,
+.vmd-editor-code {
+  background: transparent !important;
+}
+
+.v-md-editor__main {
+  background: transparent !important;
+}
+
+.v-md-editor-code__header {
+  background: transparent !important;
+}
+
+/* vue-markdown 代码块覆盖 */
+.markdown-body pre,
+.markdown-body pre code {
+  background: transparent !important;
+}
+
+/* highlight.js 默认样式覆盖 */
+.hljs {
+  background: transparent !important;
+}
