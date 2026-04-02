@@ -385,8 +385,12 @@ onMounted(() => {
 
   :deep(.md-editor-code) {
     margin: 0;
+    line-height: 1.4;
   }
-  :deep(.md-editor-code) .code-line { display: block; }
+  :deep(.md-editor-code) .code-line {
+    display: block;
+    line-height: inherit;
+  }
 
   /* Code block header styling - macOS style */
   :deep(.md-editor-code-header) {

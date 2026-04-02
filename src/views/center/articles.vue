@@ -37,12 +37,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useUserStore } from '@/stores/user'
 import { getArticleList, deleteArticle as deleteArticleApi } from '@/api/modules/article'
 import { articleTop } from '@/api/modules/user'
 import BButton from '@/components/base/BButton/index.vue'
 
-const userStore = useUserStore()
 const articles = ref<any[]>([])
 
 function formatDate(dateStr: string) {
@@ -53,8 +51,7 @@ function formatDate(dateStr: string) {
 async function fetchArticles() {
   try {
     const res = await getArticleList({
-      type: 1,
-      userID: userStore.userInfo?.userID,
+      type: 2,
       page: 1,
       limit: 20
     })

@@ -2,25 +2,43 @@
   <div class="profile-page">
     <div class="app-container">
       <div class="profile-header card" v-if="userInfo">
-        <BAvatar :src="userInfo.avatar" :size="80" :alt="userInfo.nickname" />
-        <div class="profile-info">
-          <h1 class="profile-name">{{ userInfo.nickname }}</h1>
-          <p class="profile-bio">{{ userInfo.place || '这个人很懒，什么都没写' }}</p>
-          <div class="profile-stats">
-            <div class="stat-item">
-              <span class="stat-value">{{ userInfo.articleCount }}</span>
-              <span class="stat-label">文章</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-value">{{ userInfo.fansCount }}</span>
-              <span class="stat-label">粉丝</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-value">{{ userInfo.followCount }}</span>
-              <span class="stat-label">关注</span>
+        <div class="profile-left">
+          <BAvatar :src="userInfo.avatar" :size="80" :alt="userInfo.nickname" />
+          <div class="profile-info">
+            <h1 class="profile-name">{{ userInfo.nickname }}</h1>
+            <p class="profile-bio">{{ userInfo.place || '这个人很懒，什么都没写' }}</p>
+            <div class="profile-stats">
+              <div class="stat-item">
+                <span class="stat-value">{{ userInfo.articleCount }}</span>
+                <span class="stat-label">文章</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ userInfo.fansCount }}</span>
+                <span class="stat-label">粉丝</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ userInfo.followCount }}</span>
+                <span class="stat-label">关注</span>
+              </div>
             </div>
           </div>
         </div>
+        <button 
+          v-if="showFollowButton" 
+          class="follow-btn"
+          :class="{ 'following': isFollowing }"
+          @click="handleFollow"
+          :disabled="followingLoading"
+        >
+          {{ followingLoading ? '...' : (isFollowing ? '已关注' : '关注') }}
+        </button>
+        <button 
+          v-if="showMessageButton" 
+          class="message-btn"
+          @click="handleMessage"
+        >
+          私信
+        </button>
       </div>
       
       <div class="profile-content">
@@ -261,13 +279,15 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 import type { UserBaseInfo, Article, Collection, FocusUser, FansUser } from '@/types'
-import { getUserBase, getFollowingList, getFansList } from '@/api/modules/user'
+import { getUserBase, getFollowingList, getFansList, followUser, unfollowUser } from '@/api/modules/user'
 import { getArticleList, getCollectionList } from '@/api/modules/article'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 import ArticleCard from '@/components/business/ArticleCard/index.vue'
 
 const route = useRoute()
+const userStore = useUserStore()
 
 const userInfo = ref<UserBaseInfo | null>(null)
 const articles = ref<Article[]>([])
@@ -281,6 +301,18 @@ const page = ref(1)
 const limit = 10
 const total = ref(0)
 const error = ref<string | null>(null)
+const followingLoading = ref(false)
+
+const isLoggedIn = computed(() => userStore.isLoggedIn)
+const currentUserId = computed(() => userStore.userInfo?.id)
+const routeUserId = computed(() => Number(route.params.id))
+const isFollowing = computed(() => userInfo.value?.relation === 2)
+const showFollowButton = computed(() => {
+  return isLoggedIn.value && currentUserId.value !== routeUserId.value
+})
+const showMessageButton = computed(() => {
+  return isLoggedIn.value && currentUserId.value !== routeUserId.value
+})
 
 const currentPage = computed(() => page.value)
 const totalPages = computed(() => Math.ceil(total.value / limit))
@@ -446,6 +478,35 @@ function handleTabChange(tab: string) {
   }
 }
 
+async function handleFollow() {
+  const id = Number(route.params.id)
+  if (!id || followingLoading.value) return
+  
+  followingLoading.value = true
+  
+  try {
+    if (isFollowing.value) {
+      await unfollowUser(id)
+    } else {
+      await followUser(id)
+    }
+    await fetchUserInfo()
+  } catch (err) {
+    console.error('Failed to follow/unfollow:', err)
+    alert(isFollowing.value ? '取关失败' : '关注失败')
+  } finally {
+    followingLoading.value = false
+  }
+}
+
+function handleMessage() {
+  if (!userInfo.value) return
+  const targetUserId = Number(route.params.id)
+  const targetNickname = userInfo.value.nickname
+  const targetAvatar = userInfo.value.avatar
+  window.location.href = `/messages?tab=private&targetUserId=${targetUserId}&nickname=${encodeURIComponent(targetNickname)}&avatar=${encodeURIComponent(targetAvatar)}`
+}
+
 watch(() => route.params.id, () => {
   page.value = 1
   loading.value = true
@@ -468,9 +529,65 @@ onMounted(() => {
 
 .profile-header {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: $space-6;
   padding: $space-6;
   margin-bottom: $space-6;
+}
+
+.profile-left {
+  display: flex;
+  gap: $space-6;
+}
+
+.follow-btn {
+  padding: $space-1 $space-4;
+  font-size: $text-sm;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: all $duration-fast;
+  background: $primary;
+  color: white;
+  border: none;
+  
+  &:hover {
+    background: $primary-dark;
+  }
+  
+  &.following {
+    background: $bg-secondary;
+    color: $text-secondary;
+    border: 1px solid $border;
+    
+    &:hover {
+      background: $error;
+      color: white;
+      border-color: $error;
+    }
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.message-btn {
+  padding: $space-1 $space-4;
+  font-size: $text-sm;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: all $duration-fast;
+  background: $bg-secondary;
+  color: $text-primary;
+  border: 1px solid $border;
+  
+  &:hover {
+    background: $primary;
+    color: white;
+    border-color: $primary;
+  }
 }
 
 .profile-info {
@@ -664,7 +781,7 @@ onMounted(() => {
   gap: $space-4;
   
   &__icon {
-    color: $danger;
+    color: $error;
   }
   
   p {

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { UserInfo, LoginParams, UpdateUserParams } from '@/types'
 import * as userApi from '@/api/modules/user'
-import { storage } from '@/utils'
+import { storage, globalToken, chatWS } from '@/utils'
 
 export const useUserStore = defineStore('user', () => {
   const userInfo = ref<UserInfo | null>(null)
@@ -14,8 +14,10 @@ export const useUserStore = defineStore('user', () => {
   async function login(params: LoginParams) {
     const res = await userApi.login(params)
     token.value = res.data
+    globalToken.set(res.data)
     storage.setToken(res.data)
     await fetchUserInfo()
+    chatWS.connect()
     return res
   }
 
@@ -38,8 +40,10 @@ export const useUserStore = defineStore('user', () => {
   }
 
   function logout() {
+    chatWS.disconnect()
     userInfo.value = null
     token.value = null
+    globalToken.clear()
     storage.clear()
   }
 
@@ -48,9 +52,13 @@ export const useUserStore = defineStore('user', () => {
     const savedUser = storage.getUser<UserInfo>()
     if (savedToken) {
       token.value = savedToken
+      globalToken.set(savedToken)
     }
     if (savedUser) {
       userInfo.value = savedUser
+    }
+    if (savedToken && savedUser) {
+      chatWS.connect()
     }
   }
 

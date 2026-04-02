@@ -3,12 +3,38 @@
     <div class="app-container">
       <!-- 标题输入 -->
       <div class="editor-header">
-        <input
-          v-model="title"
-          class="title-input"
-          type="text"
-          placeholder="请输入文章标题"
-        />
+        <div class="header-left">
+          <input
+            v-model="title"
+            class="title-input"
+            type="text"
+            placeholder="请输入文章标题"
+          />
+        </div>
+        <div class="header-right">
+          <button 
+            class="ai-optimize-btn" 
+            :disabled="aiOptimizing || !content.trim()"
+            @click="handleAiOptimize"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/>
+              <path d="M16 14H8a4 4 0 0 0-4 4v2h16v-2a4 4 0 0 0-4-4z"/>
+            </svg>
+            {{ aiOptimizing ? '优化中...' : 'AI优化' }}
+          </button>
+          <button 
+            v-if="canRevert" 
+            class="revert-btn" 
+            @click="handleRevert"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            还原
+          </button>
+        </div>
       </div>
       
       <!-- Markdown 编辑器 -->
@@ -79,6 +105,50 @@
           ></textarea>
         </div>
         
+        <div class="form-group">
+          <label class="form-label">文章封面</label>
+          <div class="cover-upload">
+            <div v-if="cover" class="cover-preview">
+              <img :src="cover" alt="封面预览" />
+              <div class="cover-actions">
+                <button class="cover-action-btn" @click="triggerCoverUpload">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="cover-action-btn" @click="removeCover">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div v-else class="cover-placeholder" @click="triggerCoverUpload">
+              <input
+                ref="coverInput"
+                type="file"
+                accept="image/*"
+                style="display: none"
+                @change="handleCoverChange"
+              />
+              <div v-if="coverUploading" class="cover-loading">
+                <div class="cover-spinner"></div>
+                <span>上传中...</span>
+              </div>
+              <div v-else class="cover-add">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <span>点击上传封面</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <div class="form-group form-group--checkbox">
           <label class="checkbox-label">
             <input type="checkbox" v-model="openComment" />
@@ -110,15 +180,15 @@
           </button>
           <button 
             class="footer-btn footer-btn--primary" 
-            :disabled="publishing"
+            :disabled="publishDisabled"
             @click="publishArticle"
           >
             <svg v-if="!publishing" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="22" y1="2" x2="11" y2="13"/>
               <polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
-            <span v-if="publishing" class="btn-loading"></span>
-            <span>{{ publishing ? '发布中...' : '发布文章' }}</span>
+            <span v-if="publishing || coverUploading" class="btn-loading"></span>
+            <span>{{ coverUploading ? '封面上传中...' : publishing ? '发布中...' : '发布文章' }}</span>
           </button>
         </div>
       </div>
@@ -129,12 +199,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { MdEditor } from 'md-editor-v3'
+import { MdEditor, type ToolbarNames } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import type { CategoryOption } from '@/types'
 import { getCategoryOptions, createArticle } from '@/api/modules/article'
 import { uploadImage } from '@/api/modules/banner'
-import { aiAnalysis } from '@/api/modules/search'
+import { aiAnalysis, aiOptimizeArticle } from '@/api/modules/search'
 import { useThemeStore } from '@/stores/theme'
 import BButton from '@/components/base/BButton/index.vue'
 
@@ -150,12 +220,21 @@ const openComment = ref(true)
 const categories = ref<CategoryOption[]>([])
 const publishing = ref(false)
 const analyzing = ref(false)
+const aiOptimizing = ref(false)
+const canRevert = ref(false)
+const previousContent = ref('')
+const cover = ref('')
+const coverUploading = ref(false)
+const coverInput = ref<HTMLInputElement | null>(null)
+
+// 发布按钮禁用状态：封面上传中或发布中
+const publishDisabled = computed(() => publishing.value || coverUploading.value)
 
 // 编辑器主题跟随系统
 const theme = computed(() => themeStore.isDark ? 'dark' : 'light')
 
 // 自定义工具栏
-const toolbars = [
+const toolbars = ref<ToolbarNames[]>([
   'bold',
   'underline',
   'italic',
@@ -178,7 +257,7 @@ const toolbars = [
   '=',
   'preview',
   'fullscreen'
-]
+])
 
 async function fetchCategories() {
   try {
@@ -233,6 +312,40 @@ async function handleAiAnalysis() {
   }
 }
 
+// AI 优化文章
+async function handleAiOptimize() {
+  if (!content.value.trim()) {
+    alert('请先输入文章内容')
+    return
+  }
+  
+  previousContent.value = content.value
+  aiOptimizing.value = true
+  try {
+    const res = await aiOptimizeArticle(content.value)
+    if (res.code === 0) {
+      content.value = res.data
+      canRevert.value = true
+    } else {
+      alert(res.msg || 'AI优化失败')
+    }
+  } catch (error: any) {
+    console.error('AI optimize failed:', error)
+    alert(error.message || 'AI优化失败，请稍后重试')
+  } finally {
+    aiOptimizing.value = false
+  }
+}
+
+// 还原
+function handleRevert() {
+  if (previousContent.value) {
+    content.value = previousContent.value
+    canRevert.value = false
+    previousContent.value = ''
+  }
+}
+
 // 预览文章
 function previewArticle() {
   if (!content.value.trim()) {
@@ -248,18 +361,50 @@ function previewArticle() {
 // 图片上传处理
 async function handleUploadImg(files: File[], callback: (urls: string[]) => void) {
   const urls: string[] = []
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
   
   for (const file of files) {
     try {
       const res = await uploadImage(file)
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
-      urls.push(`${baseUrl}${res.data}`)
+      urls.push(baseUrl.replace(/\/$/, '') + '/' + res.data.replace(/^\//, ''))
     } catch (error) {
       console.error('Upload failed:', error)
     }
   }
   
   callback(urls)
+}
+
+// 封面上传统一入口
+async function uploadCover(file: File): Promise<string> {
+  const res = await uploadImage(file)
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
+  return baseUrl.replace(/\/$/, '') + '/' + res.data.replace(/^\//, '')
+}
+
+function triggerCoverUpload() {
+  coverInput.value?.click()
+}
+
+async function handleCoverChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+  
+  coverUploading.value = true
+  try {
+    cover.value = await uploadCover(file)
+  } catch (error) {
+    console.error('Cover upload failed:', error)
+    alert('封面上传失败')
+  } finally {
+    coverUploading.value = false
+    target.value = ''
+  }
+}
+
+function removeCover() {
+  cover.value = ''
 }
 
 // Ctrl+S 保存
@@ -307,6 +452,7 @@ async function publishArticle() {
       tagList,
       status: 2,
       categoryID: categoryId.value,
+      cover: cover.value || undefined,
       abstract: abstract.value,
       openComment: openComment.value
     })
@@ -352,6 +498,67 @@ onMounted(() => {
 
 .editor-header {
   margin-bottom: $space-4;
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex-shrink: 0;
+}
+
+.ai-optimize-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-4;
+  height: 40px;
+  background: linear-gradient(135deg, $primary 0%, $accent 100%);
+  color: white;
+  border: none;
+  border-radius: $radius-md;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all $duration-fast;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba($primary, 0.4);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.revert-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-4;
+  height: 40px;
+  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+  color: white;
+  border: none;
+  border-radius: $radius-md;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all $duration-fast;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+  }
 }
 
 .title-input {
@@ -524,6 +731,117 @@ onMounted(() => {
   span {
     font-size: $text-sm;
     color: $text-secondary;
+  }
+}
+
+.cover-upload {
+  width: 200px;
+  height: 120px;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.cover-placeholder {
+  width: 100%;
+  height: 100%;
+  border: 2px dashed $border;
+  border-radius: $radius-md;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all $duration-fast;
+  background: $bg-secondary;
+  
+  &:hover {
+    border-color: $primary;
+    background: rgba($primary, 0.05);
+  }
+  
+  .cover-add {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-2;
+    color: $text-tertiary;
+    
+    span {
+      font-size: $text-xs;
+    }
+  }
+  
+  .cover-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-2;
+    color: $primary;
+    
+    .cover-spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid rgba($primary, 0.3);
+      border-top-color: $primary;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    span {
+      font-size: $text-xs;
+    }
+  }
+}
+
+.cover-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: $radius-md;
+  overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .cover-actions {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-3;
+    opacity: 0;
+    transition: opacity $duration-fast;
+  }
+  
+  &:hover .cover-actions {
+    opacity: 1;
+  }
+  
+  .cover-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-full;
+    border: none;
+    background: white;
+    color: $text-primary;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all $duration-fast;
+    
+    &:hover {
+      background: $primary;
+      color: white;
+    }
   }
 }
 
@@ -700,6 +1018,38 @@ onMounted(() => {
       &:hover {
         background: $dark-bg-hover;
       }
+    }
+  }
+  
+  .cover-placeholder {
+    background: $dark-bg-tertiary;
+    border-color: $dark-border;
+    
+    &:hover {
+      border-color: $primary;
+      background: rgba($primary, 0.1);
+    }
+    
+    .cover-add {
+      color: $dark-text-tertiary;
+    }
+  }
+
+  .ai-optimize-btn {
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 12px rgba($primary, 0.5);
+    }
+  }
+
+  .revert-btn {
+    background: $dark-bg-tertiary;
+    border-color: $dark-border;
+    color: $dark-text-secondary;
+    
+    &:hover {
+      color: $dark-text-primary;
+      border-color: $dark-text-tertiary;
+      background: $dark-bg-hover;
     }
   }
 }

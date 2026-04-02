@@ -126,7 +126,7 @@ function getTagValue(): string {
 }
 
 async function fetchArticles() {
-  loadingMore.value = true
+  loading.value = true
   
   try {
     const res = await searchArticle({
@@ -137,10 +137,13 @@ async function fetchArticles() {
       key: ''
     })
     
-    articles.value = res.data.list
-    total.value = res.data.count
+    const list = res.data?.list
+    articles.value = Array.isArray(list) ? list : []
+    total.value = res.data?.count ?? 0
   } catch (error) {
     console.error('Failed to fetch articles:', error)
+    articles.value = []
+    total.value = 0
   } finally {
     loading.value = false
     loadingMore.value = false
@@ -157,12 +160,10 @@ function goToPage(newPage: number) {
 // 监听分类和排序变化
 watch([() => props.categoryId, () => props.sortType], () => {
   page.value = 1
-  loading.value = true
   fetchArticles()
 })
 
 onMounted(() => {
-  loading.value = true
   fetchArticles()
 })
 </script>

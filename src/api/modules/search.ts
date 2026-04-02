@@ -62,3 +62,14 @@ export function aiArticle(content: string) {
     params: { content }
   })
 }
+
+/**
+ * AI 优化文章
+ */
+export function aiOptimizeArticle(content: string) {
+  return request<{ code: number; data: string; msg: string }>({
+    url: '/api/ai/import',
+    method: 'POST',
+    data: { content }
+  })
+}

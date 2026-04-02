@@ -88,14 +88,36 @@ export interface UserGlobalNotificationParams {
 }
 
 /**
- * 聊天会话
+ * 聊天用户信息（API返回）
+ */
+export interface ChatUserInfo {
+  userID: number
+  userNickname: string
+  userAvatar: string
+}
+
+/**
+ * 聊天消息内容
+ */
+export interface ChatMsgContent {
+  contentMsg?: { content: string }
+  imagetMsg?: { src: string }
+  markdownMsg?: { content: string }
+  readMsg?: { ChatID: number }
+}
+
+/**
+ * 聊天会话（API返回）
  */
 export interface ChatSession {
-  SU: number
-  RU: number
-  MaxDate: string
-  Count: number
-  NewChatID: number
+  userID: number
+  userNickname: string
+  userAvatar: string
+  msg: ChatMsgContent
+  msgType: number
+  newMsgDate: string
+  relation: number
+  unreadCount?: number
 }
 
 /**
@@ -103,9 +125,46 @@ export interface ChatSession {
  */
 export interface ChatRecord {
   id: number
-  createdAt: string
-  content: string
   sendUserID: number
   revUserID: number
+  msgType: number
+  msg: ChatMsgContent
+  createdAt: string
   isRead: boolean
+}
+
+/**
+ * 消息类型
+ */
+export type ChatMsgType = 1 | 2 | 3 | 9
+
+/**
+ * 好友关系
+ */
+export type FriendRelation = 0 | 1 | 2 | 3
+
+/**
+ * WebSocket 发送消息
+ */
+export interface WSChatMessage {
+  revUserID: number
+  msgType: 1 | 2 | 3
+  msg: {
+    contentMsg?: { content: string }
+    imagetMsg?: { src: string }
+    markdownMsg?: { content: string }
+  }
+}
+
+/**
+ * WebSocket 接收消息
+ */
+export interface WSReceiveMessage {
+  id: number
+  sendUserID: number
+  sendUserNickname: string
+  sendUserAvatar: string
+  msgType: number
+  msg: ChatMsgContent
+  newMsgDate: string
 }

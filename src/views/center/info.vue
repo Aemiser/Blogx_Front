@@ -3,10 +3,8 @@
     <div class="card user-card" v-if="userInfo">
       <div class="user-header">
         <BAvatar :src="userInfo.avatar" :size="80" :alt="userInfo.nickname" />
-        <div class="user-info">
-          <h2 class="user-name">{{ userInfo.nickname }}</h2>
-          <p class="user-bio">{{ userInfo.abstract || '这个人很懒，什么都没写' }}</p>
-        </div>
+        <h2 class="user-name">{{ userInfo.nickname }}</h2>
+        <p class="user-bio">{{ userInfo.abstract || '这个人很懒，什么都没写' }}</p>
       </div>
       <div class="user-stats">
         <div class="stat-item" @click="$router.push('/center/articles')">
@@ -106,21 +104,17 @@ onMounted(() => {
 .user-card {
   .user-header {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: $space-5;
-    margin-bottom: $space-6;
+    text-align: center;
     padding-bottom: $space-6;
-    border-bottom: 1px solid $border;
-  }
-
-  .user-info {
-    flex: 1;
   }
 
   .user-name {
-    font-size: $text-2xl;
-    font-weight: $font-weight-bold;
+    font-size: $text-xl;
+    font-weight: $font-weight-semibold;
     color: $text-primary;
+    margin-top: $space-4;
     margin-bottom: $space-2;
   }
 
@@ -131,8 +125,10 @@ onMounted(() => {
 
   .user-stats {
     display: flex;
-    gap: $space-10;
+    gap: $space-8;
     justify-content: center;
+    padding-top: $space-4;
+    border-top: 1px solid $border;
   }
 
   .stat-item {
@@ -140,7 +136,7 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-    padding: $space-3 $space-5;
+    padding: $space-2 $space-4;
     border-radius: $radius-md;
     transition: all $duration-fast;
 
@@ -149,14 +145,14 @@ onMounted(() => {
     }
 
     .stat-value {
-      font-size: $text-2xl;
+      font-size: $text-xl;
       font-weight: $font-weight-bold;
-      color: $text-primary;
+      color: $primary;
     }
 
     .stat-label {
-      font-size: $text-sm;
-      color: $text-secondary;
+      font-size: $text-xs;
+      color: $text-tertiary;
       margin-top: $space-1;
     }
   }
@@ -172,7 +168,6 @@ onMounted(() => {
 .info-content {
   display: flex;
   flex-direction: column;
-  gap: $space-1;
 }
 
 .info-item {

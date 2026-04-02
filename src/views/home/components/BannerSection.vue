@@ -56,12 +56,14 @@ async function fetchBanners() {
   loading.value = true
   try {
     const res = await getBannerList({ show: true, limit: '5' })
-    banners.value = res.data.list
+    const list = res.data?.list
+    banners.value = Array.isArray(list) ? list : []
     if (banners.value.length > 1) {
       startAutoplay()
     }
   } catch (error) {
     console.error('Failed to fetch banners:', error)
+    banners.value = []
   } finally {
     loading.value = false
   }

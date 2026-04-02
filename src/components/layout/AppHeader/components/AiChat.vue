@@ -136,7 +136,14 @@ function stopDrag() {
 }
 
 function formatMessage(content: string) {
-  return content.replace(/\n/g, '<br>')
+  // 先转义换行符
+  let html = content.replace(/\n/g, '<br>')
+  // 将URL转换为可点击的a标签
+  html = html.replace(
+    /(https?:\/\/[^\s<]+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+  )
+  return html
 }
 
 function scrollToBottom() {
@@ -188,7 +195,25 @@ async function sendMessage() {
               const jsonStr = line.slice(5).trim()
               const data = JSON.parse(jsonStr)
               if (data.code === 1001) {
-                alert('请登录')
+                const hasToken = storage.getToken()
+                const isSearchApi = false // AI聊天不是搜索API
+                
+                // 搜索API不处理token过期，只清除token
+                if (isSearchApi) {
+                  if (hasToken) {
+                    storage.removeToken()
+                  }
+                } else {
+                  // 其他API的token过期处理
+                  storage.clear()
+                  if (hasToken) {
+                    // 使用更友好的提示方式
+                    setTimeout(() => {
+                      alert('登录已过期，请重新登录')
+                      window.location.href = '/login'
+                    }, 100)
+                  }
+                }
                 close()
                 return
               }
@@ -364,6 +389,15 @@ watch(() => props.visible, (val) => {
     font-size: $text-sm;
     line-height: 1.6;
     word-break: break-word;
+    
+    :deep(a) {
+      color: $primary;
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
   }
   
   &__typing {
@@ -475,6 +509,10 @@ watch(() => props.visible, (val) => {
     &__text {
       background: $dark-bg-secondary;
       color: $dark-text-primary;
+      
+      :deep(a) {
+        color: lighten($primary, 20%);
+      }
     }
     
     &__message--user .ai-chat__text {

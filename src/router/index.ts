@@ -99,6 +99,18 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '浏览历史', requiresAuth: true }
       },
       {
+        path: 'following',
+        name: 'CenterFollowing',
+        component: () => import('@/views/center/following.vue'),
+        meta: { title: '我的关注', requiresAuth: true }
+      },
+      {
+        path: 'fans',
+        name: 'CenterFans',
+        component: () => import('@/views/center/fans.vue'),
+        meta: { title: '我的粉丝', requiresAuth: true }
+      },
+      {
         path: 'settings',
         name: 'CenterSettings',
         component: () => import('@/views/center/settings.vue'),

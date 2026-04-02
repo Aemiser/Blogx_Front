@@ -122,39 +122,51 @@ export function adminDeleteGlobalNotification(idList: number[]) {
 
 /**
  * 聊天记录
+ * @param recUserID 对方用户ID (后端参数名是recUserID)
+ * @param type 消息类型 1文本 2图片 3MD
+ * @param page 页码
+ * @param limit 每页数量
  */
-export function getChatRecord(userID: number) {
+export function getChatRecord(recUserID: number, type: 1 | 2 | 3 = 1, page = 1, limit = 20) {
   return request<PaginatedData<ChatRecord>>({
     url: '/api/chat/record',
     method: 'GET',
-    params: { userID }
+    params: { 
+      recUserID: String(recUserID), 
+      type: String(type),
+      page: String(page),
+      limit: String(limit),
+      _t: Date.now()
+    }
   })
 }
 
 /**
  * 会话列表
  */
-export function getChatSessionList() {
-  return request<PaginatedData<ChatSession>>({
+export function getChatSessionList(page = 1, limit = 20) {
+  return request<{ list: ChatSession[]; count: number }>({
     url: '/api/chat/session',
-    method: 'GET'
+    method: 'GET',
+    params: { page, limit }
   })
 }
 
 /**
- * 删除聊天消息
+ * 删除聊天消息（批量）
  */
-export function deleteChatMessage(id: number) {
+export function deleteChatMessages(idList: number[]) {
   return request<any>({
-    url: `/api/chat/${id}`,
-    method: 'DELETE'
+    url: '/api/chat',
+    method: 'DELETE',
+    data: { idList }
   })
 }
 
 /**
- * 删除会话
+ * 删除与指定用户的所有聊天记录
  */
-export function deleteChatSession(userID: number) {
+export function deleteUserChatHistory(userID: number) {
   return request<any>({
     url: `/api/chat/user/${userID}`,
     method: 'DELETE'
@@ -162,11 +174,22 @@ export function deleteChatSession(userID: number) {
 }
 
 /**
- * 读取消息
+ * 标记消息为已读
  */
-export function readChatMessage(id: number) {
+export function markMessageAsRead(chatID: number) {
   return request<any>({
-    url: `/api/chat/read/${id}`,
+    url: `/api/chat/read/${chatID}`,
     method: 'POST'
+  })
+}
+
+/**
+ * 获取聊天用户信息
+ */
+export function getChatUserInfo(userID: number) {
+  return request<any>({
+    url: '/api/chat/userinfo',
+    method: 'GET',
+    params: { userID }
   })
 }
