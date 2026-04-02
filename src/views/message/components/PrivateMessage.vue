@@ -56,7 +56,14 @@
           :class="{ 'dm-msg--self': isCurrentUser(msg) }"
         >
           <BAvatar
-            v-if="!isCurrentUser(msg)"
+            v-if="isCurrentUser(msg)"
+            :src="userStore.userInfo?.avatar"
+            :size="32"
+            :alt="userStore.userInfo?.nickname"
+            class="dm-msg__avatar"
+          />
+          <BAvatar
+            v-else
             :src="activeSession.userAvatar"
             :size="32"
             :alt="activeSession.userNickname"
@@ -421,18 +428,23 @@ function scrollToBottom() {
   }
 }
 
-function handleWSMessage(msg: any) {
-  if (!msg.sendUserID) return
+function handleWSMessage(response: any) {
+  const msg = response.data
+  if (!msg) return
 
-  if (activeSession.value?.userID === msg.sendUserID) {
+  const senderID = msg.seedUserID
+  if (!senderID) return
+
+  if (activeSession.value?.userID === senderID) {
     chatMessages.value.push({
       id: msg.id,
-      sendUserID: msg.sendUserID,
-      revUserID: userStore.userInfo!.userID!,
+      seedUserID: msg.seedUserID,
+      sendUserID: msg.seedUserID,
+      revUserID: msg.RevUserID,
       msgType: msg.msgType,
       msg: msg.msg,
-      createdAt: msg.newMsgDate || new Date().toISOString(),
-      isRead: true
+      createdAt: msg.createdAt,
+      isRead: msg.isRead
     })
     nextTick(() => scrollToBottom())
   }

@@ -51,7 +51,7 @@ class ChatWebSocket {
 
       this.ws.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data) as WSReceiveMessage
+          const data = JSON.parse(event.data)
           
           if (data.msgType === 9) {
             return
