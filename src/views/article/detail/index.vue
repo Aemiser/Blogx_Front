@@ -23,39 +23,6 @@
             </div>
 
             <div class="article-body markdown-body" v-html="renderedContent"></div>
-
-            <div class="article-actions">
-              <button
-                  class="action-btn"
-                  :class="{ active: article.isDigg }"
-                  @click="handleDigg"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-                </svg>
-                <span>点赞</span>
-              </button>
-              <button
-                  class="action-btn"
-                  :class="{ active: article.isCollect }"
-                  @click="handleCollect"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                </svg>
-                <span>收藏</span>
-              </button>
-              <button class="action-btn" @click="handleShare">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="18" cy="5" r="3"/>
-                  <circle cx="6" cy="12" r="3"/>
-                  <circle cx="18" cy="19" r="3"/>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                </svg>
-                <span>分享</span>
-              </button>
-            </div>
           </template>
 
           <div v-else class="empty">
@@ -100,7 +67,7 @@
 
       <aside class="app-content__sidebar">
         <ArticleAuthor v-if="article" :author="article" />
-        <TableOfContents v-if="article" :content="article.content" />
+        <TableOfContents v-if="article" :content="article.content" :article="article" />
       </aside>
     </div>
   </div>
@@ -114,7 +81,7 @@ import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css'
 import 'github-markdown-css'
 import type { ArticleDetail, CommentTreeNode } from '@/types'
-import { getArticleDetail, diggArticle, collectArticle, lookArticle } from '@/api/modules/article'
+import { getArticleDetail, lookArticle } from '@/api/modules/article'
 import { getCommentTree, createComment } from '@/api/modules/comment'
 import { formatNumber, formatRelativeTime, formatDate } from '@/utils'
 import BAvatar from '@/components/base/BAvatar/index.vue'
@@ -154,30 +121,23 @@ const md = new MarkdownIt({
       highlighted = md.utils.escapeHtml(str)
     }
 
-    const langLabel = language.toUpperCase()
     const escapedText = encodeURIComponent(str)
 
-    // 为每行代码添加行号
+    // 渲染为带macOS风格头部的高亮代码块
     const lines = highlighted.split('\n')
-    const lineNumbers = lines.map(() => `<span></span>`).join('')
-    const codeLines = lines.map(line => `<span class="code-line">${line || ' '}</span>`).join('')
-
-    return `<details class="md-editor-code" open>
-      <summary class="md-editor-code-head">
-        <div class="md-editor-code-flag"><span></span><span></span><span></span></div>
-        <div class="md-editor-code-action">
-          <span class="md-editor-code-lang">${language}</span>
-          <button class="md-editor-copy-button" data-code="${escapedText}">复制代码</button>
-          <span class="md-editor-collapse-tips">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="m14 16-4-4 4-4"></path>
-            </svg>
-          </span>
-        </div>
-      </summary>
-      <pre><code class="language-${language}" language="${language}"><span class="md-editor-code-block">${codeLines}</span><span rn-wrapper="" aria-hidden="true">${lineNumbers}</span></code></pre>
-    </details>`
+    const codeLines = lines.map(line => `<span class="code-line">${line || ' '}</span>`).join('\n')
+    const codeHtml = `<span class="md-editor-code-block">${codeLines}</span>`
+    const copyBtn = `<button class="md-editor-copy-button" data-code="${escapedText}">复制</button>`
+    const header = `<div class="md-editor-code-header">
+      <div class="md-editor-code-dots">
+        <span class="dot dot--red"></span>
+        <span class="dot dot--yellow"></span>
+        <span class="dot dot--green"></span>
+      </div>
+      <span class="md-editor-code-lang">${language.toUpperCase()}</span>
+      <div class="md-editor-code-actions">${copyBtn}</div>
+    </div>`
+    return `<pre data-line="${lines.length}" class="md-editor-code">${header}<code class="language-${language}" language="${language}"><div style="margin: 24px">${codeHtml}</div></code></pre>`
   }
 })
 
@@ -283,12 +243,6 @@ async function handleCollect() {
   } catch (error) {
     console.error('Failed to collect:', error)
   }
-}
-
-function handleShare() {
-  const url = window.location.href
-  navigator.clipboard.writeText(url)
-  alert('链接已复制到剪贴板')
 }
 
 async function submitComment() {
@@ -408,208 +362,82 @@ onMounted(() => {
   color: $text-primary;
   word-wrap: break-word;
 
-  // 代码块容器
-  :deep(.md-editor-code) {
-    margin: $space-4 0;
-    border-radius: $radius-lg;
-    overflow: hidden;
-    background: #0d1117;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  :deep(pre) {
+    margin: 0;
+    padding: 0px;
     border: 1px solid #30363d;
-
-    &[open] > .md-editor-code-head .md-editor-collapse-tips svg {
-      transform: rotate(-90deg);
-    }
-
-    > summary {
-      list-style: none;
-      cursor: pointer;
-
-      &::-webkit-details-marker {
-        display: none;
-      }
-    }
+    background: rgb(40, 44, 52);
+    overflow-x: auto;
+    border-radius: 8px;
+    position: relative;
   }
 
-  // 代码块顶部栏
-  :deep(.md-editor-code-head) {
+  /* Ensure base text color for code blocks remains readable while preserving syntax highlighting */
+  :deep(pre) code {
+    color: #ffffff;
+  }
+
+  /* Copy button moved into header; keep default flow for now */
+  :deep(pre) .md-editor-copy-button {
+    position: static;
+    margin-left: 8px;
+  }
+
+  :deep(.md-editor-code) {
+    margin: 0;
+  }
+  :deep(.md-editor-code) .code-line { display: block; }
+
+  /* Code block header styling - macOS style */
+  :deep(.md-editor-code-header) {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 8px 16px;
+    padding: 8px 12px;
+    font-size: 12px;
     background: #161b22;
     border-bottom: 1px solid #30363d;
-    min-height: 38px;
+    color: #8b949e;
   }
-
-  // macOS 风格的三个圆点
-  :deep(.md-editor-code-flag) {
+  :deep(.md-editor-code-dots) {
     display: flex;
     gap: 6px;
-
-    span {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-
-      &:nth-child(1) {
-        background: #ff5f56;
-      }
-
-      &:nth-child(2) {
-        background: #ffbd2e;
-      }
-
-      &:nth-child(3) {
-        background: #27ca40;
-      }
-    }
+    margin-right: 12px;
   }
-
-  // 代码块右侧操作区
-  :deep(.md-editor-code-action) {
+  :deep(.md-editor-code-dots .dot) {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  :deep(.md-editor-code-dots .dot--red) { background: #ff5f56; }
+  :deep(.md-editor-code-dots .dot--yellow) { background: #ffbd2e; }
+  :deep(.md-editor-code-dots .dot--green) { background: #27ca40; }
+  :deep(.md-editor-code-lang) {
+    flex: 1;
+    font-weight: 500;
+    color: #c9d1d9;
+  }
+  :deep(.md-editor-code-actions) {
     display: flex;
     align-items: center;
-    gap: 12px;
   }
-
-  :deep(.md-editor-code-lang) {
-    font-size: 12px;
-    color: #8b949e;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
   :deep(.md-editor-copy-button) {
-    padding: 4px 12px;
+    padding: 4px 10px;
     background: transparent;
     border: 1px solid #30363d;
     border-radius: 4px;
     color: #8b949e;
-    font-size: 12px;
+    font-size: 11px;
     cursor: pointer;
     transition: all 0.2s;
-
-    &:hover {
-      background: #21262d;
-      color: #c9d1d9;
-      border-color: #8b949e;
-    }
-
-    &.copied {
-      background: rgba(63, 185, 80, 0.2);
-      border-color: #3fb950;
-      color: #3fb950;
-    }
   }
-
-  // 折叠图标
-  :deep(.md-editor-collapse-tips) {
-    display: flex;
-    align-items: center;
-    color: #8b949e;
-    cursor: pointer;
-
-    svg {
-      transition: transform 0.2s;
-    }
-
-    &:hover {
-      color: #c9d1d9;
-    }
+  :deep(.md-editor-copy-button:hover) {
+    background: #21262d;
+    color: #c9d1d9;
+    border-color: #8b949e;
   }
-
-  // 代码块内容
-  :deep(pre) {
-    margin: 0;
-    padding: 16px;
-    background: #0d1117;
-    overflow-x: auto;
-
-    code {
-      display: block;
-      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
-      font-size: 13px;
-      line-height: 1.6;
-      tab-size: 2;
-      position: relative;
-    }
-  }
-
-  // 代码行容器
-  :deep(.md-editor-code-block) {
-    display: block;
-  }
-
-  // 代码行
-  :deep(.code-line) {
-    display: block;
-  }
-
-  // 行号容器
-  :deep([rn-wrapper]) {
-    position: absolute;
-    left: 0;
-    top: 0;
-    padding: 16px 0;
-    pointer-events: none;
-    user-select: none;
-
-    > span {
-      display: block;
-      padding-left: 16px;
-      padding-right: 12px;
-      text-align: right;
-      color: #6e7681;
-      font-size: 13px;
-      line-height: 1.6;
-      font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-      border-right: 1px solid #30363d;
-      margin-right: 12px;
-    }
-  }
-
-  // 行内代码
-  :deep(code:not(pre code)) {
-    background: rgba($primary, 0.1);
-    padding: 2px 6px;
-    border-radius: $radius-sm;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
-    font-size: 0.85em;
-    color: $accent;
-    font-weight: $font-weight-medium;
-  }
-}
-
-.article-actions {
-  display: flex;
-  gap: $space-4;
-  margin-top: $space-6;
-  padding-top: $space-6;
-  border-top: 1px solid $border-light;
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  gap: $space-2;
-  padding: $space-3 $space-4;
-  border: 1px solid $border;
-  border-radius: $radius-md;
-  color: $text-secondary;
-  font-size: $text-sm;
-  transition: all $duration-fast;
-
-  &:hover {
-    border-color: $primary;
-    color: $primary;
-  }
-
-  &.active {
-    background: rgba($primary, 0.1);
-    border-color: $primary;
-    color: $primary;
+  :deep(.md-editor-copy-button.copied) {
+    color: #3fb950;
+    border-color: #3fb950;
   }
 }
 
@@ -693,20 +521,6 @@ onMounted(() => {
         color: $primary;
         background: rgba($primary, 0.2);
       }
-    }
-  }
-
-  .article-actions {
-    border-color: $dark-border;
-  }
-
-  .action-btn {
-    border-color: $dark-border;
-    color: $dark-text-secondary;
-
-    &:hover {
-      border-color: $primary;
-      color: $primary;
     }
   }
 
