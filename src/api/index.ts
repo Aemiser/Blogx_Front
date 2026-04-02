@@ -31,9 +31,10 @@ service.interceptors.response.use(
     const res = response.data
 
     if (res.code !== 0) {
-      // token 过期
-      if (res.code === 1001 && res.msg === 'token已过期') {
+      // token 不存在或已过期
+      if (res.code === 1001) {
         storage.clear()
+        alert('请登录')
         window.location.href = '/login'
       }
       return Promise.reject(new Error(res.msg || 'Error'))

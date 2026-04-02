@@ -18,14 +18,39 @@
         :article="article"
       />
       
-      <div class="article-list__more" v-if="hasMore">
-        <button class="load-more-btn" @click="loadMore" :disabled="loadingMore">
-          {{ loadingMore ? '加载中...' : '加载更多' }}
+      <div class="article-list__pagination" v-if="totalPages > 0">
+        <button 
+          class="page-btn prev" 
+          @click="goToPage(currentPage - 1)" 
+          :disabled="currentPage === 1 || loadingMore"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
         </button>
-      </div>
-      
-      <div class="article-list__empty" v-else>
-        没有更多了
+        
+        <template v-for="pageNum in displayPages" :key="pageNum">
+          <span v-if="pageNum === -1" class="page-ellipsis">...</span>
+          <button 
+            v-else
+            class="page-btn"
+            :class="{ active: pageNum === currentPage }"
+            @click="goToPage(pageNum)"
+            :disabled="loadingMore"
+          >
+            {{ pageNum }}
+          </button>
+        </template>
+        
+        <button 
+          class="page-btn next" 
+          @click="goToPage(currentPage + 1)" 
+          :disabled="currentPage === totalPages || loadingMore"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
       </div>
     </template>
     
@@ -62,7 +87,34 @@ const page = ref(1)
 const limit = 10
 const total = ref(0)
 
-const hasMore = computed(() => articles.value.length < total.value)
+const currentPage = computed(() => page.value)
+const totalPages = computed(() => Math.ceil(total.value / limit))
+const displayPages = computed(() => {
+  const pages: number[] = []
+  const total = totalPages.value
+  const current = currentPage.value
+  
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) pages.push(i)
+  } else {
+    if (current <= 4) {
+      for (let i = 1; i <= 5; i++) pages.push(i)
+      pages.push(-1) // 省略号
+      pages.push(total)
+    } else if (current >= total - 3) {
+      pages.push(1)
+      pages.push(-1)
+      for (let i = total - 4; i <= total; i++) pages.push(i)
+    } else {
+      pages.push(1)
+      pages.push(-1)
+      for (let i = current - 1; i <= current + 1; i++) pages.push(i)
+      pages.push(-1)
+      pages.push(total)
+    }
+  }
+  return pages
+})
 
 // 获取分类名称作为 tag 参数
 function getTagValue(): string {
@@ -73,27 +125,19 @@ function getTagValue(): string {
   return ''
 }
 
-async function fetchArticles(isLoadMore = false) {
-  if (isLoadMore) {
-    loadingMore.value = true
-  } else {
-    loading.value = true
-  }
+async function fetchArticles() {
+  loadingMore.value = true
   
   try {
     const res = await searchArticle({
       tag: getTagValue(),
       type: (props.sortType ?? 0) as 0 | 1 | 2 | 3 | 4,
-      page: String(page.value),
-      limit: String(limit),
+      page: page.value,
+      limit: limit,
       key: ''
     })
     
-    if (isLoadMore) {
-      articles.value = [...articles.value, ...res.data.list]
-    } else {
-      articles.value = res.data.list
-    }
+    articles.value = res.data.list
     total.value = res.data.count
   } catch (error) {
     console.error('Failed to fetch articles:', error)
@@ -103,18 +147,22 @@ async function fetchArticles(isLoadMore = false) {
   }
 }
 
-function loadMore() {
-  page.value++
-  fetchArticles(true)
+function goToPage(newPage: number) {
+  if (newPage < 1 || newPage > totalPages.value || loadingMore.value) return
+  page.value = newPage
+  fetchArticles()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // 监听分类和排序变化
 watch([() => props.categoryId, () => props.sortType], () => {
   page.value = 1
+  loading.value = true
   fetchArticles()
 })
 
 onMounted(() => {
+  loading.value = true
   fetchArticles()
 })
 </script>
@@ -193,24 +241,53 @@ onMounted(() => {
   }
 }
 
-.load-more-btn {
-  padding: $space-3 $space-8;
+.article-list__pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-4 0;
+}
+
+.page-ellipsis {
+  color: $text-tertiary;
+  user-select: none;
+}
+
+.page-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 $space-2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: $bg-card;
   border: 1px solid $border;
   border-radius: $radius-md;
   color: $text-secondary;
-  font-size: $text-base;
+  font-size: $text-sm;
   cursor: pointer;
   transition: all $duration-fast;
   
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled):not(.active) {
     border-color: $primary;
     color: $primary;
+  }
+  
+  &.active {
+    background: $primary;
+    border-color: $primary;
+    color: white;
   }
   
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+  
+  &.prev,
+  &.next {
+    padding: 0;
   }
 }
 
@@ -227,7 +304,7 @@ onMounted(() => {
 
 [data-theme="dark"] {
   .article-card-skeleton,
-  .load-more-btn {
+  .page-btn {
     background: $dark-bg-card;
     border-color: $dark-border;
   }

@@ -28,6 +28,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '编辑文章', requiresAuth: true }
   },
   {
+    path: '/preview',
+    name: 'Preview',
+    component: () => import('@/views/article/preview/index.vue'),
+    meta: { title: '文章预览', hideHeader: true, hideFooter: true }
+  },
+  {
     path: '/user/:id',
     name: 'UserProfile',
     component: () => import('@/views/user/profile/index.vue'),
@@ -53,9 +59,52 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/profile',
-    name: 'Profile',
-    component: () => import('@/views/user/profile/index.vue'),
-    meta: { title: '个人中心', requiresAuth: true }
+    redirect: '/center'
+  },
+  {
+    path: '/center',
+    name: 'Center',
+    component: () => import('@/views/center/index.vue'),
+    meta: { title: '用户中心', requiresAuth: true },
+    redirect: '/center/info',
+    children: [
+      {
+        path: 'info',
+        name: 'CenterInfo',
+        component: () => import('@/views/center/info.vue'),
+        meta: { title: '个人信息', requiresAuth: true }
+      },
+      {
+        path: 'collections',
+        name: 'CenterCollections',
+        component: () => import('@/views/center/collections.vue'),
+        meta: { title: '收藏夹', requiresAuth: true }
+      },
+      {
+        path: 'articles',
+        name: 'CenterArticles',
+        component: () => import('@/views/center/articles.vue'),
+        meta: { title: '发布的文章', requiresAuth: true }
+      },
+      {
+        path: 'comments',
+        name: 'CenterComments',
+        component: () => import('@/views/center/comments.vue'),
+        meta: { title: '发布的评论', requiresAuth: true }
+      },
+      {
+        path: 'history',
+        name: 'CenterHistory',
+        component: () => import('@/views/center/history.vue'),
+        meta: { title: '浏览历史', requiresAuth: true }
+      },
+      {
+        path: 'settings',
+        name: 'CenterSettings',
+        component: () => import('@/views/center/settings.vue'),
+        meta: { title: '设置', requiresAuth: true }
+      }
+    ]
   },
   {
     path: '/messages',

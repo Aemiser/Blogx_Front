@@ -1,30 +1,54 @@
 <template>
   <div class="sidebar-card article-author" v-if="author">
-    <h4 class="sidebar-card__title">作者介绍</h4>
-    <div class="author-info" @click="goProfile">
-      <BAvatar :src="author.userAvatar" :size="48" :alt="author.nickName" />
-      <div class="author-info__detail">
-        <div class="author-info__name">{{ author.nickName }}</div>
-        <div class="author-info__bio">{{ author.abstract || '这个人很懒，什么都没写' }}</div>
+    <div class="author-avatar" @click="goProfile">
+      <BAvatar :src="avatarUrl" :size="64" :alt="displayName" />
+    </div>
+    <div class="author-name" @click="goProfile">{{ displayName }}</div>
+    <div class="author-stats">
+      <div class="stat-item">
+        <span class="stat-value">{{ formatNumber(author.lookCount || 0) }}</span>
+        <span class="stat-label">阅读</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">{{ author.commentCount || 0 }}</span>
+        <span class="stat-label">评论</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">{{ author.diggCount || 0 }}</span>
+        <span class="stat-label">点赞</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { formatNumber } from '@/utils'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 
 const props = defineProps<{
   author: {
     userID: number
-    nickName: string
-    userAvatar: string
-    abstract?: string
+    nickName?: string
+    nickname?: string
+    userAvatar?: string
+    useravatar?: string
+    lookCount?: number
+    commentCount?: number
+    diggCount?: number
   }
 }>()
 
 const router = useRouter()
+
+const displayName = computed(() => {
+  return props.author.nickName || props.author.nickname || '未知用户'
+})
+
+const avatarUrl = computed(() => {
+  return props.author.userAvatar || props.author.useravatar || ''
+})
 
 function goProfile() {
   router.push(`/user/${props.author.userID}`)
@@ -35,49 +59,59 @@ function goProfile() {
 .article-author {
   background: $bg-card;
   border-radius: $radius-lg;
-  padding: $space-4;
+  padding: $space-6 $space-4;
   margin-bottom: $space-4;
-}
-
-.sidebar-card__title {
-  font-size: $text-base;
-  font-weight: $font-weight-semibold;
-  color: $text-primary;
-  margin-bottom: $space-4;
-}
-
-.author-info {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: $space-3;
+}
+
+.author-avatar {
   cursor: pointer;
-  padding: $space-2;
-  border-radius: $radius-md;
-  transition: background $duration-fast;
+  transition: transform $duration-fast;
 
   &:hover {
-    background: $bg-hover;
+    transform: scale(1.05);
   }
+}
 
-  &__detail {
-    flex: 1;
-    min-width: 0;
+.author-name {
+  font-size: $text-lg;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+  margin-top: $space-3;
+  cursor: pointer;
+  transition: color $duration-fast;
+
+  &:hover {
+    color: $primary;
   }
+}
 
-  &__name {
-    font-size: $text-base;
-    font-weight: $font-weight-medium;
+.author-stats {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  margin-top: $space-4;
+  padding-top: $space-4;
+  border-top: 1px solid $border-light;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+
+  .stat-value {
+    font-size: $text-lg;
+    font-weight: $font-weight-semibold;
     color: $text-primary;
   }
 
-  &__bio {
-    font-size: $text-sm;
+  .stat-label {
+    font-size: $text-xs;
     color: $text-tertiary;
-    margin-top: $space-1;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
 }
 
@@ -86,13 +120,13 @@ function goProfile() {
     background: $dark-bg-card;
   }
 
-  .sidebar-card__title,
-  .author-info__name {
+  .author-name,
+  .stat-item .stat-value {
     color: $dark-text-primary;
   }
 
-  .author-info:hover {
-    background: $dark-bg-hover;
+  .author-stats {
+    border-color: $dark-border;
   }
 }
 </style>
