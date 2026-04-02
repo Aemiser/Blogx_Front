@@ -15,11 +15,14 @@
       </div>
       
       <div class="editor-content">
-        <textarea
+        <MdEditor
           v-model="content"
-          class="content-textarea"
+          :theme="theme"
+          :toolbars="toolbars"
           placeholder="开始编写文章内容..."
-        ></textarea>
+          :on-upload-img="handleUploadImg"
+          @on-save="handleSave"
+        />
       </div>
       
       <!-- 发布弹窗 -->
@@ -81,13 +84,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { MdEditor } from 'md-editor-v3'
+import 'md-editor-v3/lib/style.css'
 import type { CategoryOption } from '@/types'
 import { getCategoryOptions, createArticle } from '@/api/modules/article'
+import { uploadImage } from '@/api/modules/banner'
+import { useThemeStore } from '@/stores/theme'
 import BButton from '@/components/base/BButton/index.vue'
 
 const router = useRouter()
+const themeStore = useThemeStore()
 
 const title = ref('')
 const content = ref('')
@@ -99,6 +107,36 @@ const categories = ref<CategoryOption[]>([])
 const showPublishModal = ref(false)
 const publishing = ref(false)
 
+// 编辑器主题跟随系统
+const theme = computed(() => themeStore.isDark ? 'dark' : 'light')
+
+// 自定义工具栏
+const toolbars = [
+  'bold',
+  'underline',
+  'italic',
+  '-',
+  'title',
+  'strikeThrough',
+  'quote',
+  'unorderedList',
+  'orderedList',
+  'task',
+  '-',
+  'codeRow',
+  'code',
+  'link',
+  'image',
+  'table',
+  '-',
+  'revoke',
+  'next',
+  '=',
+  'save',
+  'preview',
+  'fullscreen'
+]
+
 async function fetchCategories() {
   try {
     const res = await getCategoryOptions()
@@ -108,7 +146,43 @@ async function fetchCategories() {
   }
 }
 
+// 图片上传处理
+async function handleUploadImg(files: File[], callback: (urls: string[]) => void) {
+  const urls: string[] = []
+  
+  for (const file of files) {
+    try {
+      const res = await uploadImage(file)
+      // 拼接完整的图片URL
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
+      urls.push(`${baseUrl}${res.data}`)
+    } catch (error) {
+      console.error('Upload failed:', error)
+    }
+  }
+  
+  callback(urls)
+}
+
+// Ctrl+S 保存
+function handleSave() {
+  saveDraft()
+}
+
 async function saveDraft() {
+  if (!title.value.trim()) {
+    alert('请先输入文章标题')
+    return
+  }
+  // TODO: 保存草稿到本地或后端
+  localStorage.setItem('article_draft', JSON.stringify({
+    title: title.value,
+    content: content.value,
+    categoryId: categoryId.value,
+    tagsInput: tagsInput.value,
+    abstract: abstract.value,
+    openComment: openComment.value
+  }))
   alert('草稿已保存')
 }
 
@@ -140,6 +214,9 @@ async function publishArticle() {
       openComment: openComment.value
     })
     
+    // 清除草稿
+    localStorage.removeItem('article_draft')
+    
     alert('发布成功')
     router.push('/')
   } catch (error: any) {
@@ -150,8 +227,27 @@ async function publishArticle() {
   }
 }
 
+// 加载草稿
+function loadDraft() {
+  const draft = localStorage.getItem('article_draft')
+  if (draft) {
+    try {
+      const data = JSON.parse(draft)
+      title.value = data.title || ''
+      content.value = data.content || ''
+      categoryId.value = data.categoryId
+      tagsInput.value = data.tagsInput || ''
+      abstract.value = data.abstract || ''
+      openComment.value = data.openComment ?? true
+    } catch (e) {
+      console.error('Failed to load draft:', e)
+    }
+  }
+}
+
 onMounted(() => {
   fetchCategories()
+  loadDraft()
 })
 </script>
 
@@ -191,28 +287,8 @@ onMounted(() => {
 }
 
 .editor-content {
-  background: $bg-card;
   border-radius: $radius-lg;
-  padding: $space-4;
-}
-
-.content-textarea {
-  width: 100%;
-  min-height: 500px;
-  border: none;
-  font-size: $text-lg;
-  line-height: $line-height-relaxed;
-  color: $text-primary;
-  resize: none;
-  background: transparent;
-  
-  &::placeholder {
-    color: $text-quaternary;
-  }
-  
-  &:focus {
-    outline: none;
-  }
+  overflow: hidden;
 }
 
 .modal-overlay {
@@ -276,5 +352,22 @@ onMounted(() => {
   justify-content: flex-end;
   gap: $space-3;
   margin-top: $space-6;
+}
+
+// 深色模式
+[data-theme="dark"] {
+  .title-input {
+    color: $dark-text-primary;
+  }
+  
+  .publish-modal {
+    background: $dark-bg-card;
+  }
+  
+  .select {
+    background: $dark-bg-card;
+    border-color: $dark-border;
+    color: $dark-text-primary;
+  }
 }
 </style>
