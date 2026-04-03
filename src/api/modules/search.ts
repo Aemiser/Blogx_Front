@@ -6,7 +6,8 @@ import type {
   TagAggregation,
   AIAnalysisResult,
   Article,
-  PaginatedData
+  PaginatedData,
+  UserSearchResult
 } from '@/types'
 
 /**
@@ -26,6 +27,17 @@ export function searchArticle(params: SearchArticleParams) {
 export function fullTextSearch(params: FullTextSearchParams) {
   return request<PaginatedData<FullTextSearchResult>>({
     url: '/api/search/text',
+    method: 'GET',
+    params
+  })
+}
+
+/**
+ * 用户搜索
+ */
+export function searchUser(params: FullTextSearchParams) {
+  return request<PaginatedData<UserSearchResult>>({
+    url: '/api/search/user',
     method: 'GET',
     params
   })

@@ -2,6 +2,36 @@
   <div class="settings-page">
     <div class="card">
       <h2 class="section-title">设置</h2>
+      
+      <div class="settings-section">
+        <h3 class="subsection-title">头像</h3>
+        <div class="avatar-section">
+          <div class="avatar-preview">
+            <img 
+              v-if="avatarUrl || userInfo?.avatar" 
+              :src="avatarUrl || getFullImageUrl(userInfo?.avatar)" 
+              alt="头像预览" 
+              class="avatar-img" 
+            />
+            <BAvatar v-else :src="userInfo?.avatar" :size="80" />
+          </div>
+          <div class="avatar-actions">
+            <input 
+              type="file" 
+              ref="fileInput"
+              accept="image/*" 
+              @change="handleFileChange"
+              style="display: none"
+            />
+            <BButton variant="outline" size="sm" @click="triggerUpload">
+              {{ avatarUrl ? '重新选择' : '选择图片' }}
+            </BButton>
+            <p v-if="avatarUrl" class="upload-tip success">图片已上传: {{ avatarUrl }}</p>
+            <p v-else class="upload-tip">支持 jpg、png、gif 格式，图片大小不超过5MB</p>
+          </div>
+        </div>
+      </div>
+
       <div class="settings-section">
         <h3 class="subsection-title">个人资料</h3>
         <form class="settings-form" @submit.prevent="handleSaveProfile">
@@ -91,16 +121,23 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { getUserDetail, updateUser, changePassword, bindEmail } from '@/api/modules/user'
+import { uploadImage } from '@/api/modules/banner'
 import BButton from '@/components/base/BButton/index.vue'
+import BAvatar from '@/components/base/BAvatar/index.vue'
 
 const userInfo = ref<any>(null)
 const savingProfile = ref(false)
 const showBindEmailDialog = ref(false)
 const showChangePasswordDialog = ref(false)
 
+const avatarUrl = ref('')
+const avatarPreview = ref('')
+const fileInput = ref<HTMLInputElement | null>(null)
+
 const profileForm = reactive({
   nickname: '',
-  abstract: ''
+  abstract: '',
+  avatar: ''
 })
 
 const privacyForm = reactive({
@@ -109,12 +146,62 @@ const privacyForm = reactive({
   openFans: false
 })
 
+function triggerUpload() {
+  fileInput.value?.click()
+}
+
+function getFullImageUrl(path: string) {
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  
+  const baseUrl = window.location.origin
+  let fullPath = path.replace(/^\//, '')
+  
+  return baseUrl + '/' + fullPath
+}
+
+function getPathFromUrl(url: string) {
+  if (!url) return ''
+  const baseUrl = window.location.origin
+  return url.replace(baseUrl, '')
+}
+
+async function handleFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  const validTypes = ['image/jpeg', 'image/png', 'image/gif']
+  if (!validTypes.includes(file.type)) {
+    alert('请上传 jpg、png、gif 格式的图片')
+    return
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert('图片大小不能超过 5MB')
+    return
+  }
+
+  avatarPreview.value = URL.createObjectURL(file)
+
+  try {
+    const res = await uploadImage(file)
+    const uploadedPath = res.data
+    avatarUrl.value = getFullImageUrl(uploadedPath)
+  } catch (error) {
+    console.error('Upload failed:', error)
+    alert('图片上传失败')
+    avatarPreview.value = ''
+  }
+}
+
 async function fetchUserInfo() {
   try {
     const res = await getUserDetail()
     userInfo.value = res.data
     profileForm.nickname = res.data.nickname
     profileForm.abstract = res.data.abstract
+    profileForm.avatar = res.data.avatar ? getFullImageUrl(res.data.avatar) : ''
     privacyForm.openCollect = res.data.openCollect
     privacyForm.openFollow = res.data.openFollow
     privacyForm.openFans = res.data.openFans
@@ -126,7 +213,19 @@ async function fetchUserInfo() {
 async function handleSaveProfile() {
   savingProfile.value = true
   try {
-    await updateUser(profileForm)
+    const data: any = {
+      nickname: profileForm.nickname,
+      abstract: profileForm.abstract
+    }
+    
+    if (avatarUrl.value) {
+      const path = getPathFromUrl(avatarUrl.value)
+      data.avatar = path
+      profileForm.avatar = path
+    }
+    
+    await updateUser(data)
+    avatarUrl.value = ''
     alert('保存成功')
     fetchUserInfo()
   } catch (error) {
@@ -180,6 +279,42 @@ onMounted(() => {
   font-weight: $font-weight-medium;
   margin-bottom: $space-4;
   color: $text-primary;
+}
+
+.avatar-section {
+  display: flex;
+  align-items: center;
+  gap: $space-6;
+}
+
+.avatar-preview {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: $bg-secondary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-actions {
+  .upload-tip {
+    font-size: $text-xs;
+    color: $text-tertiary;
+    margin-top: $space-2;
+    
+    &.success {
+      color: $success;
+    }
+  }
 }
 
 .settings-form {

@@ -38,8 +38,15 @@
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
         </button>
+        <BAvatar 
+          :src="activeSession.userAvatar" 
+          :size="32" 
+          :alt="activeSession.userNickname" 
+          class="dm-chat__avatar"
+          @click="goToUserProfile(activeSession.userID)"
+        />
         <span class="dm-chat__name">{{ activeSession.userNickname }}</span>
-        <span class="dm-chat__relation">{{ getRelationText(activeSession.relation) }}</span>
+        <span class="dm-chat__relation" :class="getRelationClass(activeSession.relation)">{{ getRelationText(activeSession.relation) }}</span>
       </div>
 
       <div class="dm-chat__msgs" ref="chatContainerRef" @scroll="handleScroll">
@@ -49,6 +56,7 @@
         <div v-if="!hasMoreMessages && chatMessages.length > 0" class="dm-chat__no-more">
           没有更多消息了
         </div>
+
         <div
           v-for="msg in chatMessages"
           :key="msg.id"
@@ -61,6 +69,7 @@
             :size="32"
             :alt="userStore.userInfo?.nickname"
             class="dm-msg__avatar"
+            @click="goToUserProfile(userStore.userInfo?.userID)"
           />
           <BAvatar
             v-else
@@ -68,6 +77,7 @@
             :size="32"
             :alt="activeSession.userNickname"
             class="dm-msg__avatar"
+            @click="goToUserProfile(activeSession.userID)"
           />
           <div class="dm-msg__content">
             <div class="dm-msg__bubble">
@@ -78,6 +88,7 @@
             <div class="dm-msg__time">{{ formatTime(msg.createdAt) }}</div>
           </div>
         </div>
+
         <div v-if="chatMessages.length === 0" class="dm-chat__empty">
           开始发送消息吧
         </div>
@@ -163,17 +174,37 @@
     <div v-if="previewImageUrl" class="image-preview-overlay" @click="previewImageUrl = null">
       <img :src="previewImageUrl" class="image-preview" />
     </div>
+
+    <Teleport to="body">
+      <Transition name="error-toast">
+        <div v-if="errorMessages.length > 0" class="error-toast">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+          <span>{{ errorMessages[0]?.msg }}</span>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, onUnmounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import type { ChatSession } from '@/types'
 import { getChatSessionList, getChatRecord, markMessageAsRead } from '@/api/modules/message'
 import { uploadImage } from '@/api/modules/banner'
 import { formatRelativeTime, chatWS } from '@/utils'
 import { useUserStore } from '@/stores/user'
 import BAvatar from '@/components/base/BAvatar/index.vue'
+
+const router = useRouter()
+
+const props = defineProps<{
+  targetUserId?: number
+  targetNickname?: string
+  targetAvatar?: string
+}>()
 
 interface ChatMessage {
   id: number
@@ -196,6 +227,8 @@ const currentUserID = computed(() => userStore.userInfo?.userID)
 
 const sessions = ref<ChatSession[]>([])
 const chatMessages = ref<ChatMessage[]>([])
+const pendingMessages = ref<Map<number, ChatMessage>>(new Map())
+const errorMessages = ref<{ id: number; msg: string }[]>([])
 const activeSession = ref<ChatSession | null>(null)
 const searchKey = ref('')
 const inputMessage = ref('')
@@ -256,16 +289,34 @@ function getLastMessage(session: ChatSession): string {
 
 function formatTime(dateStr: string): string {
   if (!dateStr) return ''
-  return formatRelativeTime(dateStr)
+  const date = new Date(dateStr)
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
 }
 
 function getRelationText(relation: number): string {
   switch (relation) {
-    case 3: return '好友'
+    case 4: return '好友'
+    case 3: return '粉丝'
     case 2: return '已关注'
-    case 1: return '粉丝'
+    case 1: return '陌生人'
     default: return '陌生人'
   }
+}
+
+function getRelationClass(relation: number): string {
+  switch (relation) {
+    case 4: return 'relation--friend'
+    case 3: return 'relation--follower'
+    case 2: return 'relation--following'
+    case 1: return 'relation--stranger'
+    default: return 'relation--stranger'
+  }
+}
+
+function goToUserProfile(userId: number) {
+  router.push(`/user/${userId}`)
 }
 
 function getImageUrl(url: string | undefined): string {
@@ -352,21 +403,23 @@ function handleSend() {
   if (!inputMessage.value.trim() || !activeSession.value) return
 
   const msgType = isMarkdownMode.value ? 3 : 1
+  const msgContent = inputMessage.value.trim()
+  const tempId = Date.now()
   
   if (isMarkdownMode.value) {
-    chatWS.sendMarkdown(activeSession.value.userID, inputMessage.value.trim())
+    chatWS.sendMarkdown(activeSession.value.userID, msgContent, tempId)
   } else {
-    chatWS.sendText(activeSession.value.userID, inputMessage.value.trim())
+    chatWS.sendText(activeSession.value.userID, msgContent, tempId)
   }
   
-  chatMessages.value.push({
-    id: Date.now(),
+  pendingMessages.value.set(tempId, {
+    id: tempId,
     sendUserID: userStore.userInfo!.userID!,
     revUserID: activeSession.value.userID,
     msgType: msgType,
     msg: msgType === 3 
-      ? { markdownMsg: { content: inputMessage.value.trim() } }
-      : { contentMsg: { Content: inputMessage.value.trim() } },
+      ? { markdownMsg: { content: msgContent } }
+      : { contentMsg: { Content: msgContent } },
     createdAt: new Date().toISOString(),
     isRead: true
   })
@@ -429,27 +482,58 @@ function scrollToBottom() {
 }
 
 function handleWSMessage(response: any) {
-  const msg = response.data
-  if (!msg) return
-
-  const senderID = msg.seedUserID
-  if (!senderID) return
-
-  if (activeSession.value?.userID === senderID) {
-    chatMessages.value.push({
-      id: msg.id,
-      seedUserID: msg.seedUserID,
-      sendUserID: msg.seedUserID,
-      revUserID: msg.RevUserID,
-      msgType: msg.msgType,
-      msg: msg.msg,
-      createdAt: msg.createdAt,
-      isRead: msg.isRead
-    })
-    nextTick(() => scrollToBottom())
+  console.log('[WS 收到消息]', response)
+  
+  if (response.code === 0) {
+    if (response.data) {
+      const msg = response.data
+      
+      const tempId = msg.tempId
+      if (tempId && pendingMessages.value.has(tempId)) {
+        const pendingMsg = pendingMessages.value.get(tempId)
+        pendingMessages.value.delete(tempId)
+        
+        chatMessages.value.push({
+          ...pendingMsg!,
+          id: msg.id || tempId
+        })
+        nextTick(() => scrollToBottom())
+      } else if (!tempId) {
+        const isMe = msg.isMe === true
+        const otherUserId = isMe ? msg.RevUserID : msg.seedUserID
+        
+        if (activeSession.value?.userID === otherUserId) {
+          const exists = chatMessages.value.some(m => m.id === msg.id)
+          if (!exists) {
+            chatMessages.value.push({
+              id: msg.id,
+              seedUserID: msg.seedUserID,
+              sendUserID: msg.seedUserID,
+              revUserID: msg.RevUserID,
+              msgType: msg.msgType,
+              msg: msg.msg,
+              createdAt: msg.createdAt,
+              isRead: msg.isRead
+            })
+            nextTick(() => scrollToBottom())
+          }
+        }
+      }
+    }
+    
+    fetchSessions()
+    return
   }
-
-  fetchSessions()
+  
+  if (response.code !== 1001) {
+    const msgId = response.data?.tempId || Date.now()
+    pendingMessages.value.delete(msgId)
+    
+    errorMessages.value.push({ id: msgId, msg: response.msg || '发送失败' })
+    setTimeout(() => {
+      errorMessages.value.shift()
+    }, 3000)
+  }
 }
 
 watch(showEmoji, (val) => {
@@ -469,9 +553,36 @@ watch(showEmoji, (val) => {
 
 onMounted(() => {
   chatWS.connect()
-  fetchSessions()
+  fetchSessions().then(() => {
+    if (props.targetUserId) {
+      openTargetSession()
+    }
+  })
   wsUnsubscribe.value = chatWS.onMessage(handleWSMessage)
 })
+
+async function openTargetSession() {
+  if (!props.targetUserId) return
+  
+  const existingSession = sessions.value.find(s => s.userID === props.targetUserId)
+  
+  if (existingSession) {
+    await openSession(existingSession)
+  } else {
+    const newSession: ChatSession = {
+      userID: props.targetUserId,
+      userNickname: props.targetNickname || '用户' + props.targetUserId,
+      userAvatar: props.targetAvatar || '',
+      newMsgDate: new Date().toISOString(),
+      msg: undefined,
+      unreadCount: 0
+    }
+    
+    sessions.value.unshift(newSession)
+    
+    await openSession(newSession)
+  }
+}
 
 onUnmounted(() => {
   if (wsUnsubscribe.value) {
@@ -645,6 +756,15 @@ onUnmounted(() => {
     }
   }
 
+  &__avatar {
+    cursor: pointer;
+    transition: opacity 0.15s;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
   &__name {
     font-size: 15px;
     font-weight: 500;
@@ -653,10 +773,28 @@ onUnmounted(() => {
 
   &__relation {
     font-size: 12px;
-    color: $text-tertiary;
     padding: 2px 8px;
-    background: $bg-secondary;
     border-radius: 10px;
+
+    &.relation--friend {
+      color: #22c55e;
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    &.relation--follower {
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    &.relation--following {
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    &.relation--stranger {
+      color: $text-tertiary;
+      background: $bg-secondary;
+    }
   }
 
   &__msgs {
@@ -706,6 +844,27 @@ onUnmounted(() => {
     padding: 12px;
     color: $text-tertiary;
     font-size: 12px;
+  }
+
+  &__center-msg {
+    display: flex;
+    justify-content: center;
+    margin: 16px 0;
+  }
+
+  &__center-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 4px;
+    color: $text-secondary;
+    font-size: 13px;
+
+    svg {
+      flex-shrink: 0;
+    }
   }
 }
 
@@ -887,6 +1046,12 @@ onUnmounted(() => {
   &__avatar {
     flex-shrink: 0;
     margin-top: 4px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+
+    &:hover {
+      opacity: 0.8;
+    }
   }
 
   &__content {
@@ -961,5 +1126,38 @@ onUnmounted(() => {
   max-width: 90%;
   max-height: 90%;
   border-radius: 8px;
+}
+
+.error-toast {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  svg {
+    color: #ff4d4f;
+    flex-shrink: 0;
+  }
+}
+
+.error-toast-enter-active,
+.error-toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.error-toast-enter-from,
+.error-toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-20px);
 }
 </style>

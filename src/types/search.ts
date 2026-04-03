@@ -31,6 +31,27 @@ export interface FullTextSearchResult {
 }
 
 /**
+ * 用户搜索结果
+ */
+export interface UserSearchResult {
+  userID: number
+  nickname: string
+  avatar: string
+  abstract: string
+  Relation: number
+}
+
+/**
+ * 全文搜索结果
+ */
+export interface FullTextSearchResult {
+  articleID: number
+  head: string
+  body: string
+  flag: string
+}
+
+/**
  * 标签聚合
  */
 export interface TagAggregation {

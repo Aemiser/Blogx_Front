@@ -114,33 +114,36 @@ class ChatWebSocket {
     return false
   }
 
-  sendText(revUserID: number, content: string) {
+  sendText(revUserID: number, content: string, tempId?: number) {
     return this.send({
       revUserID,
       msgType: 1,
       msg: {
         contentMsg: { content }
-      }
+      },
+      tempId
     })
   }
 
-  sendImage(revUserID: number, src: string) {
+  sendImage(revUserID: number, src: string, tempId?: number) {
     return this.send({
       revUserID,
       msgType: 2,
       msg: {
         imagetMsg: { src }
-      }
+      },
+      tempId
     })
   }
 
-  sendMarkdown(revUserID: number, content: string) {
+  sendMarkdown(revUserID: number, content: string, tempId?: number) {
     return this.send({
       revUserID,
       msgType: 3,
       msg: {
         markdownMsg: { content }
-      }
+      },
+      tempId
     })
   }
 

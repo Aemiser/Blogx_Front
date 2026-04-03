@@ -154,6 +154,7 @@ export interface WSChatMessage {
     imagetMsg?: { src: string }
     markdownMsg?: { content: string }
   }
+  tempId?: number
 }
 
 /**

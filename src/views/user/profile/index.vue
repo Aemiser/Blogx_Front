@@ -30,7 +30,7 @@
           @click="handleFollow"
           :disabled="followingLoading"
         >
-          {{ followingLoading ? '...' : (isFollowing ? '已关注' : '关注') }}
+          {{ followingLoading ? '...' : followButtonText }}
         </button>
         <button 
           v-if="showMessageButton" 
@@ -201,7 +201,12 @@
             </div>
             
             <div v-else-if="following.length > 0" class="users-list">
-              <div v-for="user in following" :key="user.focusUserID" class="user-item">
+              <div 
+                v-for="user in following" 
+                :key="user.focusUserID" 
+                class="user-item"
+                @click="goToUserProfile(user.focusUserID)"
+              >
                 <div class="user-avatar">
                   <BAvatar :src="user.focusUserAvatar" :size="48" :alt="user.focusUserNickname" />
                 </div>
@@ -247,7 +252,12 @@
             </div>
             
             <div v-else-if="fans.length > 0" class="users-list">
-              <div v-for="user in fans" :key="user.fansUserID" class="user-item">
+              <div 
+                v-for="user in fans" 
+                :key="user.fansUserID" 
+                class="user-item"
+                @click="goToUserProfile(user.fansUserID)"
+              >
                 <div class="user-avatar">
                   <BAvatar :src="user.fansUserAvatar" :size="48" :alt="user.fansUserNickname" />
                 </div>
@@ -278,7 +288,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import type { UserBaseInfo, Article, Collection, FocusUser, FansUser } from '@/types'
 import { getUserBase, getFollowingList, getFansList, followUser, unfollowUser } from '@/api/modules/user'
@@ -287,6 +297,7 @@ import BAvatar from '@/components/base/BAvatar/index.vue'
 import ArticleCard from '@/components/business/ArticleCard/index.vue'
 
 const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
 
 const userInfo = ref<UserBaseInfo | null>(null)
@@ -306,7 +317,17 @@ const followingLoading = ref(false)
 const isLoggedIn = computed(() => userStore.isLoggedIn)
 const currentUserId = computed(() => userStore.userInfo?.id)
 const routeUserId = computed(() => Number(route.params.id))
-const isFollowing = computed(() => userInfo.value?.relation === 2)
+const relation = computed(() => userInfo.value?.relation ?? 1)
+const isFollowing = computed(() => relation.value === 2 || relation.value === 4)
+const followButtonText = computed(() => {
+  switch (relation.value) {
+    case 1: return '关注'
+    case 2: return '取关'
+    case 3: return '回关'
+    case 4: return '取关'
+    default: return '关注'
+  }
+})
 const showFollowButton = computed(() => {
   return isLoggedIn.value && currentUserId.value !== routeUserId.value
 })
@@ -407,7 +428,7 @@ async function fetchCollections() {
   
   try {
     const res = await getCollectionList({
-      type: 1,
+      type: 2,
       UserID: id,
       page: 1,
       limit: 20
@@ -485,15 +506,17 @@ async function handleFollow() {
   followingLoading.value = true
   
   try {
-    if (isFollowing.value) {
+    if (relation.value === 2 || relation.value === 4) {
+      // 已是关注或互为好友，取消关注
       await unfollowUser(id)
     } else {
+      // 陌生人(1)或他关注了我(3)，执行关注
       await followUser(id)
     }
     await fetchUserInfo()
   } catch (err) {
     console.error('Failed to follow/unfollow:', err)
-    alert(isFollowing.value ? '取关失败' : '关注失败')
+    alert(relation.value === 2 || relation.value === 4 ? '取关失败' : '关注失败')
   } finally {
     followingLoading.value = false
   }
@@ -520,6 +543,10 @@ onMounted(() => {
   fetchUserInfo()
   handleTabChange(activeTab.value)
 })
+
+function goToUserProfile(userId: number) {
+  router.push(`/user/${userId}`)
+}
 </script>
 
 <style scoped lang="scss">
@@ -550,6 +577,7 @@ onMounted(() => {
   background: $primary;
   color: white;
   border: none;
+  margin-right: $space-2;
   
   &:hover {
     background: $primary-dark;
@@ -927,6 +955,7 @@ onMounted(() => {
   border-radius: $radius-md;
   background: $bg-card;
   transition: all $duration-fast;
+  cursor: pointer;
   
   &:hover {
     background: $bg-hover;

@@ -36,23 +36,6 @@ service.interceptors.response.use(
     const res = response.data
 
     if (res.code !== 0) {
-      // 检查这个API是否是需要认证的API
-      const isPublicApi = response.config.url?.startsWith('/api/site/')
-      
-      // 公共API返回错误不处理token
-      if (!isPublicApi) {
-        // 只在明确的token相关错误时清除token
-        const isTokenError = res.code === 1001 || 
-          (res.msg && (res.msg.includes('token为空') || res.msg.includes('token已过期')))
-        
-        if (isTokenError) {
-          const hasToken = globalToken.get() || storage.getToken()
-          if (hasToken) {
-            console.log('Token error but token exists, keeping it')
-            // 不清除token，因为token确实存在，可能是后端问题
-          }
-        }
-      }
       return Promise.reject(new Error(res.msg || 'Error'))
     }
 

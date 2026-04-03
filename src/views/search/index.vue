@@ -21,13 +21,13 @@
         <div class="app-content__main">
           <div class="search-filters">
             <button
-              v-for="filter in filters"
-              :key="filter.value"
+              v-for="type in searchTypes"
+              :key="type.value"
               class="filter-btn"
-              :class="{ active: activeFilter === filter.value }"
-              @click="activeFilter = filter.value; handleSearch()"
+              :class="{ active: activeSearchType === type.value }"
+              @click="activeSearchType = type.value; handleSearch()"
             >
-              {{ filter.label }}
+              {{ type.label }}
             </button>
           </div>
           
@@ -35,19 +35,31 @@
             <div class="loading__spinner"></div>
           </div>
           
-          <template v-else-if="results.length > 0">
+          <!-- 文章搜索结果 -->
+          <template v-else-if="activeSearchType === 'article' && results.length > 0">
             <div
               v-for="item in results"
-              :key="item.id"
+              :key="item.articleID"
               class="search-result-item"
-              @click="goDetail(item.id)"
+              @click="goDetail(item.articleID)"
             >
-              <h3 class="result-title" v-html="item.title"></h3>
-              <p class="result-abstract" v-if="item.abstract">{{ item.abstract }}</p>
-              <div class="result-meta">
-                <span>{{ item.nickName }}</span>
-                <span>{{ formatNumber(item.lookCount) }} 阅读</span>
-                <span>{{ item.commentCount }} 评论</span>
+              <h3 class="result-title" v-html="item.head"></h3>
+              <p class="result-abstract" v-if="item.body" v-html="decodeHtml(item.body)"></p>
+            </div>
+          </template>
+          
+          <!-- 用户搜索结果 -->
+          <template v-else-if="activeSearchType === 'user' && userResults.length > 0">
+            <div
+              v-for="user in userResults"
+              :key="user.userID"
+              class="search-result-item"
+              @click="goUser(user.userID)"
+            >
+              <img :src="user.avatar" class="user-avatar" />
+              <div class="user-info">
+                <h3 class="user-name">{{ user.nickname }}</h3>
+                <p class="user-abstract" v-if="user.abstract">{{ user.abstract }}</p>
               </div>
             </div>
           </template>
@@ -80,8 +92,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import type { Article, TagAggregation } from '@/types'
-import { searchArticle, getTagAggregation } from '@/api/modules/search'
+import type { FullTextSearchResult, UserSearchResult } from '@/types'
+import { fullTextSearch, searchUser, getTagAggregation } from '@/api/modules/search'
 import { formatNumber } from '@/utils'
 import BButton from '@/components/base/BButton/index.vue'
 
@@ -90,16 +102,14 @@ const router = useRouter()
 
 const keyword = ref('')
 const loading = ref(false)
-const results = ref<Article[]>([])
+const results = ref<(FullTextSearchResult | UserSearchResult)[]>([])
+const userResults = ref<UserSearchResult[]>([])
 const tags = ref<TagAggregation[]>([])
-const activeFilter = ref(0)
+const activeSearchType = ref<'article' | 'user'>('article')
 
-const filters = [
-  { label: '综合', value: 0 },
-  { label: '最新', value: 1 },
-  { label: '最热', value: 2 },
-  { label: '点赞', value: 3 },
-  { label: '收藏', value: 4 }
+const searchTypes = [
+  { label: '文章', value: 'article' as const },
+  { label: '用户', value: 'user' as const }
 ]
 
 async function handleSearch() {
@@ -107,14 +117,22 @@ async function handleSearch() {
   
   loading.value = true
   try {
-    const res = await searchArticle({
-      tag: '',
-      type: activeFilter.value as 0 | 1 | 2 | 3 | 4,
-      page: 1,
-      limit: 20,
-      key: keyword.value.trim()
-    })
-    results.value = res.data.list
+    if (activeSearchType.value === 'article') {
+      const res = await fullTextSearch({
+        key: keyword.value.trim(),
+        page: 1,
+        limit: 20
+      })
+      results.value = res.data.list
+    } else {
+      const res = await searchUser({
+        key: keyword.value.trim(),
+        page: 1,
+        limit: 20
+      })
+      results.value = res.data.list
+      userResults.value = res.data.list
+    }
   } catch (error) {
     console.error('Search failed:', error)
   } finally {
@@ -138,6 +156,18 @@ function searchByTag(tag: string) {
 
 function goDetail(id: number) {
   router.push(`/article/${id}`)
+}
+
+function goUser(id: number) {
+  router.push(`/user/${id}`)
+}
+
+function decodeHtml(html: string): string {
+  return html
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
 }
 
 onMounted(() => {
@@ -205,10 +235,36 @@ onMounted(() => {
   margin-bottom: $space-3;
   cursor: pointer;
   transition: all $duration-fast;
+  display: flex;
+  align-items: center;
+  gap: $space-4;
   
   &:hover {
     box-shadow: $shadow-md;
   }
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: $radius-full;
+  object-fit: cover;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-size: $text-base;
+  font-weight: $font-weight-medium;
+  color: $text-primary;
+}
+
+.user-abstract {
+  font-size: $text-sm;
+  color: $text-tertiary;
+  margin-top: $space-1;
 }
 
 .result-title {
@@ -216,10 +272,12 @@ onMounted(() => {
   font-weight: $font-weight-medium;
   color: $text-primary;
   margin-bottom: $space-2;
+  line-height: 1.5;
   
   :deep(em) {
-    font-style: normal;
-    color: $accent;
+    font-style: italic;
+    color: $primary;
+    font-weight: $font-weight-semibold;
   }
 }
 
@@ -231,6 +289,12 @@ onMounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  line-height: 1.6;
+  
+  :deep(em) {
+    font-style: italic;
+    color: $primary;
+  }
 }
 
 .result-meta {
