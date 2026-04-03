@@ -58,34 +58,37 @@
         </div>
 
         <div
-          v-for="msg in chatMessages"
+          v-for="(msg, index) in chatMessages"
           :key="msg.id"
-          class="dm-msg"
-          :class="{ 'dm-msg--self': isCurrentUser(msg) }"
+          class="dm-msg-item"
         >
-          <BAvatar
-            v-if="isCurrentUser(msg)"
-            :src="userStore.userInfo?.avatar"
-            :size="32"
-            :alt="userStore.userInfo?.nickname"
-            class="dm-msg__avatar"
-            @click="goToUserProfile(userStore.userInfo?.userID)"
-          />
-          <BAvatar
-            v-else
-            :src="activeSession.userAvatar"
-            :size="32"
-            :alt="activeSession.userNickname"
-            class="dm-msg__avatar"
-            @click="goToUserProfile(activeSession.userID)"
-          />
-          <div class="dm-msg__content">
-            <div class="dm-msg__bubble">
-              <template v-if="msg.msgType === 1">{{ msg.msg?.contentMsg?.Content }}</template>
-              <img v-else-if="msg.msgType === 2" :src="msg.msg?.imagetMsg?.Src" class="dm-msg__image" @click="previewImage(msg.msg?.imagetMsg?.Src)" />
-              <div v-else-if="msg.msgType === 3" class="dm-msg__md" v-html="renderMarkdown(msg.msg?.markdownMsg?.content)"></div>
+          <div v-if="shouldShowTime(index)" class="dm-chat__time-divider">
+            <span>{{ formatMessageTime(msg.createdAt) }}</span>
+          </div>
+          <div class="dm-msg" :class="{ 'dm-msg--self': isCurrentUser(msg) }">
+            <BAvatar
+              v-if="isCurrentUser(msg)"
+              :src="userStore.userInfo?.avatar"
+              :size="32"
+              :alt="userStore.userInfo?.nickname"
+              class="dm-msg__avatar"
+              @click="goToUserProfile(userStore.userInfo?.userID)"
+            />
+            <BAvatar
+              v-else
+              :src="activeSession.userAvatar"
+              :size="32"
+              :alt="activeSession.userNickname"
+              class="dm-msg__avatar"
+              @click="goToUserProfile(activeSession.userID)"
+            />
+            <div class="dm-msg__content">
+              <div class="dm-msg__bubble">
+                <template v-if="msg.msgType === 1">{{ msg.msg?.contentMsg?.Content }}</template>
+                <img v-else-if="msg.msgType === 2" :src="msg.msg?.imagetMsg?.Src" class="dm-msg__image" @click="previewImage(msg.msg?.imagetMsg?.Src)" />
+                <div v-else-if="msg.msgType === 3" class="dm-msg__md" v-html="renderMarkdown(msg.msg?.markdownMsg?.content)"></div>
+              </div>
             </div>
-            <div class="dm-msg__time">{{ formatTime(msg.createdAt) }}</div>
           </div>
         </div>
 
@@ -293,6 +296,43 @@ function formatTime(dateStr: string): string {
   const hours = String(date.getHours()).padStart(2, '0')
   const minutes = String(date.getMinutes()).padStart(2, '0')
   return `${hours}:${minutes}`
+}
+
+function formatMessageTime(dateStr: string): string {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+  
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  
+  if (diffDays === 0) {
+    return `${hours}:${minutes}`
+  } else if (diffDays === 1) {
+    return '昨天'
+  } else if (diffDays < 7) {
+    const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+    return weekDays[date.getDay()]
+  } else {
+    return `${year}-${month}-${day}`
+  }
+}
+
+function shouldShowTime(index: number): boolean {
+  if (index === 0) return true
+  const currentMsg = chatMessages.value[index]
+  const prevMsg = chatMessages.value[index - 1]
+  if (!currentMsg.createdAt || !prevMsg.createdAt) return false
+  
+  const currentTime = new Date(currentMsg.createdAt).getTime()
+  const prevTime = new Date(prevMsg.createdAt).getTime()
+  const diffMinutes = (currentTime - prevTime) / (1000 * 60)
+  
+  return diffMinutes >= 5
 }
 
 function getRelationText(relation: number): string {
@@ -844,6 +884,22 @@ onUnmounted(() => {
     padding: 12px;
     color: $text-tertiary;
     font-size: 12px;
+  }
+
+  &__time-divider {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    font-size: 12px;
+    color: $text-tertiary;
+    padding: 8px 0;
+
+    span {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 0, 0, 0.06);
+      border-radius: 4px;
+    }
   }
 
   &__center-msg {
