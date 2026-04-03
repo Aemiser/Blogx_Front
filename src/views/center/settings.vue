@@ -13,9 +13,12 @@
               alt="头像预览" 
               class="avatar-img" 
             />
-            <BAvatar v-else :src="userInfo?.avatar" :size="80" />
+            <div v-else class="avatar-placeholder">
+              <BAvatar :src="userInfo?.avatar" :size="80" />
+            </div>
           </div>
-          <div class="avatar-actions">
+          
+          <div class="avatar-upload">
             <input 
               type="file" 
               ref="fileInput"
@@ -23,10 +26,15 @@
               @change="handleFileChange"
               style="display: none"
             />
-            <BButton variant="outline" size="sm" @click="triggerUpload">
-              {{ avatarUrl ? '重新选择' : '选择图片' }}
+            <BButton variant="primary" size="sm" @click="triggerUpload" :loading="uploading">
+              {{ uploading ? '上传中...' : '更换头像' }}
             </BButton>
-            <p v-if="avatarUrl" class="upload-tip success">图片已上传: {{ avatarUrl }}</p>
+            
+            <div v-if="uploading" class="progress-bar">
+              <div class="progress-line"></div>
+            </div>
+            
+            <p v-if="avatarUrl" class="upload-tip success">图片已更换，保存后生效</p>
             <p v-else class="upload-tip">支持 jpg、png、gif 格式，图片大小不超过5MB</p>
           </div>
         </div>
@@ -115,24 +123,78 @@
         </div>
       </div>
     </div>
+
+    <!-- 绑定邮箱弹窗 -->
+    <div v-if="showBindEmailDialog" class="dialog-overlay" @click.self="showBindEmailDialog = false">
+      <div class="dialog">
+        <div class="dialog-header">
+          <h3>{{ userInfo?.email ? '更换邮箱' : '绑定邮箱' }}</h3>
+          <span class="dialog-close" @click="showBindEmailDialog = false">&times;</span>
+        </div>
+        <div class="dialog-body">
+          <div class="form-group">
+            <label class="form-label">邮箱地址</label>
+            <input
+              v-model="emailForm.email"
+              class="input"
+              type="email"
+              placeholder="请输入邮箱地址"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">验证码</label>
+            <div class="code-input-group">
+              <input
+                v-model="emailForm.code"
+                class="input"
+                type="text"
+                placeholder="请输入验证码"
+                maxlength="6"
+              />
+              <BButton 
+                variant="outline" 
+                size="sm" 
+                :disabled="countdown > 0"
+                @click="sendEmailCode"
+              >
+                {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+              </BButton>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <BButton variant="ghost" @click="showBindEmailDialog = false">取消</BButton>
+          <BButton variant="primary" :loading="bindingEmail" @click="handleBindEmail">确认绑定</BButton>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { getUserDetail, updateUser, changePassword, bindEmail } from '@/api/modules/user'
+import { getUserDetail, updateUser, sendEmail, bindEmail } from '@/api/modules/user'
 import { uploadImage } from '@/api/modules/banner'
 import BButton from '@/components/base/BButton/index.vue'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 
 const userInfo = ref<any>(null)
 const savingProfile = ref(false)
+const uploading = ref(false)
 const showBindEmailDialog = ref(false)
 const showChangePasswordDialog = ref(false)
+const bindingEmail = ref(false)
+const countdown = ref(0)
+let countdownTimer: any = null
 
 const avatarUrl = ref('')
-const avatarPreview = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
+
+const emailForm = reactive({
+  email: '',
+  code: '',
+  emailID: ''
+})
 
 const profileForm = reactive({
   nickname: '',
@@ -182,8 +244,8 @@ async function handleFileChange(event: Event) {
     return
   }
 
-  avatarPreview.value = URL.createObjectURL(file)
-
+  uploading.value = true
+  
   try {
     const res = await uploadImage(file)
     const uploadedPath = res.data
@@ -191,7 +253,9 @@ async function handleFileChange(event: Event) {
   } catch (error) {
     console.error('Upload failed:', error)
     alert('图片上传失败')
-    avatarPreview.value = ''
+    avatarUrl.value = ''
+  } finally {
+    uploading.value = false
   }
 }
 
@@ -243,6 +307,69 @@ async function updatePrivacy() {
   }
 }
 
+async function sendEmailCode() {
+  if (!emailForm.email) {
+    alert('请输入邮箱地址')
+    return
+  }
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(emailForm.email)) {
+    alert('请输入有效的邮箱地址')
+    return
+  }
+  
+  try {
+    const res = await sendEmail({
+      type: 1,
+      email: emailForm.email,
+      captchaID: '',
+      captchaCode: ''
+    })
+    emailForm.emailID = res.data.emailID
+    countdown.value = 60
+    countdownTimer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(countdownTimer)
+      }
+    }, 1000)
+    alert('验证码已发送到您的邮箱')
+  } catch (error: any) {
+    console.error('Send email failed:', error)
+    alert(error.response?.data?.msg || '发送失败')
+  }
+}
+
+async function handleBindEmail() {
+  if (!emailForm.email) {
+    alert('请输入邮箱地址')
+    return
+  }
+  if (!emailForm.code) {
+    alert('请输入验证码')
+    return
+  }
+  
+  bindingEmail.value = true
+  try {
+    await bindEmail({
+      emailID: emailForm.emailID,
+      emailCode: emailForm.code
+    })
+    alert('绑定成功')
+    showBindEmailDialog.value = false
+    emailForm.email = ''
+    emailForm.code = ''
+    fetchUserInfo()
+  } catch (error: any) {
+    console.error('Bind email failed:', error)
+    alert(error.response?.data?.msg || '绑定失败')
+  } finally {
+    bindingEmail.value = false
+  }
+}
+
 onMounted(() => {
   fetchUserInfo()
 })
@@ -283,20 +410,21 @@ onMounted(() => {
 
 .avatar-section {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: $space-6;
+  gap: $space-4;
 }
 
 .avatar-preview {
-  flex-shrink: 0;
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   overflow: hidden;
   background: $bg-secondary;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2px solid $border;
 }
 
 .avatar-img {
@@ -305,15 +433,49 @@ onMounted(() => {
   object-fit: cover;
 }
 
-.avatar-actions {
-  .upload-tip {
-    font-size: $text-xs;
-    color: $text-tertiary;
-    margin-top: $space-2;
-    
-    &.success {
-      color: $success;
-    }
+.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-3;
+}
+
+.progress-bar {
+  width: 200px;
+  height: 2px;
+  background: $bg-secondary;
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.progress-line {
+  height: 100%;
+  width: 30%;
+  background: $primary;
+  animation: loading 1s ease-in-out infinite;
+}
+
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.avatar-upload .upload-tip {
+  font-size: $text-xs;
+  color: $text-tertiary;
+  
+  &.success {
+    color: $success;
   }
 }
 
@@ -408,6 +570,73 @@ onMounted(() => {
 
   input:checked + .slider:before {
     transform: translateX(24px);
+  }
+}
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog {
+  background: $bg-card;
+  border-radius: $radius-lg;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: $shadow-xl;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $space-4 $space-5;
+  border-bottom: 1px solid $border;
+
+  h3 {
+    font-size: $text-lg;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+}
+
+.dialog-close {
+  font-size: $text-2xl;
+  color: $text-tertiary;
+  cursor: pointer;
+  line-height: 1;
+  
+  &:hover {
+    color: $text-primary;
+  }
+}
+
+.dialog-body {
+  padding: $space-5;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-3;
+  padding: $space-4 $space-5;
+  border-top: 1px solid $border;
+}
+
+.code-input-group {
+  display: flex;
+  gap: $space-3;
+  
+  .input {
+    flex: 1;
   }
 }
 </style>
