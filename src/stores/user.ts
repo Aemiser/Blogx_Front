@@ -62,6 +62,10 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  function getToken(): string | null {
+    return token.value
+  }
+
   return {
     userInfo,
     token,
@@ -71,7 +75,8 @@ export const useUserStore = defineStore('user', () => {
     fetchUserInfo,
     updateUserInfo,
     logout,
-    init
+    init,
+    getToken
   }
 }, {
   persist: false

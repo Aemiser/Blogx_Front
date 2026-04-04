@@ -1,6 +1,5 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import { storage, globalToken } from '@/utils'
-import type { ApiResponse } from '@/types'
 
 const service: AxiosInstance = axios.create({
   baseURL: '',
@@ -17,7 +16,9 @@ service.interceptors.request.use(
     const sToken = storage.getToken()
     const token = gToken || sToken
     
-    const isPublicApi = config.url?.startsWith('/api/site/')
+    const isPublicApi = config.url?.startsWith('/api/user/login') || 
+                        config.url?.startsWith('/api/user/register') ||
+                        config.url?.startsWith('/api/user/send_email')
     
     if (token && !isPublicApi) {
       config.headers['token'] = token
@@ -32,10 +33,11 @@ service.interceptors.request.use(
 
 // 响应拦截器
 service.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => {
-    const res = response.data
+  (response) => {
+    const res = response.data as any
 
-    if (res.code !== 0) {
+    const successCodes = [0, 1001, 200]
+    if (res.code !== undefined && !successCodes.includes(res.code)) {
       return Promise.reject(new Error(res.msg || 'Error'))
     }
 
@@ -49,6 +51,6 @@ service.interceptors.response.use(
 
 export default service
 
-export function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
+export function request<T>(config: AxiosRequestConfig): Promise<any> {
   return service(config)
 }

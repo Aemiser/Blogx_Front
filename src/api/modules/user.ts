@@ -128,10 +128,11 @@ export function updateUser(data: UpdateUserParams) {
 /**
  * 用户列表（管理员）
  */
-export function getUserList() {
+export function getUserList(params?: { page?: number; limit?: number; key?: string }) {
   return request<PaginatedData<UserListItem>>({
     url: '/api/user',
-    method: 'GET'
+    method: 'GET',
+    params
   })
 }
 
@@ -143,6 +144,17 @@ export function adminUpdateUser(data: AdminUpdateUserParams) {
     url: '/api/user/admin',
     method: 'PUT',
     data
+  })
+}
+
+/**
+ * 更新用户角色（管理员）
+ */
+export function updateUserRole(userID: number, role: number) {
+  return request<any>({
+    url: '/api/user/admin',
+    method: 'PUT',
+    data: { userID, role }
   })
 }
 

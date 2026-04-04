@@ -23,22 +23,24 @@
             </div>
           </div>
         </div>
-        <button 
-          v-if="showFollowButton" 
-          class="follow-btn"
-          :class="{ 'following': isFollowing }"
-          @click="handleFollow"
-          :disabled="followingLoading"
-        >
-          {{ followingLoading ? '...' : followButtonText }}
-        </button>
-        <button 
-          v-if="showMessageButton" 
-          class="message-btn"
-          @click="handleMessage"
-        >
-          私信
-        </button>
+        <div class="profile-actions" v-if="showFollowButton || showMessageButton">
+          <button 
+            v-if="showFollowButton" 
+            class="follow-btn"
+            :class="{ 'following': isFollowing }"
+            @click="handleFollow"
+            :disabled="followingLoading"
+          >
+            {{ followingLoading ? '...' : followButtonText }}
+          </button>
+          <button 
+            v-if="showMessageButton" 
+            class="message-btn"
+            @click="handleMessage"
+          >
+            私信
+          </button>
+        </div>
       </div>
       
       <div class="profile-content">
@@ -568,6 +570,12 @@ function goToUserProfile(userId: number) {
   gap: $space-6;
 }
 
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
 .follow-btn {
   padding: $space-1 $space-4;
   font-size: $text-sm;
@@ -577,7 +585,6 @@ function goToUserProfile(userId: number) {
   background: $primary;
   color: white;
   border: none;
-  margin-right: $space-2;
   
   &:hover {
     background: $primary-dark;

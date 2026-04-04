@@ -73,6 +73,7 @@ export interface ArticleListParams {
   order?: string
   status?: ArticleStatus
   collectID?: number
+  key?: string
 }
 
 /**

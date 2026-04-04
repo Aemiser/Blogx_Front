@@ -58,7 +58,7 @@ export function deleteBanner(data: CreateBannerParams) {
 export function uploadImage(file: File) {
   const formData = new FormData()
   formData.append('file', file)
-  return request<string>({
+  return request<ImageInfo>({
     url: '/api/images',
     method: 'POST',
     data: formData,

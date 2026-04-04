@@ -145,20 +145,59 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin',
     name: 'Admin',
-    component: () => import('@/views/admin/dashboard/index.vue'),
-    meta: { title: '管理后台', requiresAuth: true, requiresAdmin: true }
-  },
-  {
-    path: '/admin/users',
-    name: 'AdminUsers',
-    component: () => import('@/views/admin/users/index.vue'),
-    meta: { title: '用户管理', requiresAuth: true, requiresAdmin: true }
-  },
-  {
-    path: '/admin/articles',
-    name: 'AdminArticles',
-    component: () => import('@/views/admin/articles/index.vue'),
-    meta: { title: '文章管理', requiresAuth: true, requiresAdmin: true }
+    component: () => import('@/views/admin/layout/index.vue'),
+    meta: { title: '管理后台', requiresAuth: true, requiresAdmin: true, hideHeader: true, hideFooter: true },
+    redirect: '/admin',
+    children: [
+      {
+        path: '',
+        name: 'AdminDashboard',
+        component: () => import('@/views/admin/dashboard/index.vue'),
+        meta: { title: '数据统计', requiresAuth: true, requiresAdmin: true, hideHeader: true, hideFooter: true }
+      },
+      {
+        path: 'users',
+        name: 'AdminUsers',
+        component: () => import('@/views/admin/users/index.vue'),
+        meta: { title: '用户管理', requiresAuth: true, requiresAdmin: true, hideHeader: true, hideFooter: true }
+      },
+      {
+        path: 'articles',
+        name: 'AdminArticles',
+        component: () => import('@/views/admin/articles/index.vue'),
+        meta: { title: '文章管理', requiresAuth: true, requiresAdmin: true, hideHeader: true, hideFooter: true }
+      },
+      {
+        path: 'articles/examine',
+        name: 'AdminArticlesExamine',
+        component: () => import('@/views/admin/articles/examine/index.vue'),
+        meta: { title: '文章审核', requiresAuth: true, requiresAdmin: true, hideHeader: true, hideFooter: true }
+      },
+      {
+        path: 'site',
+        name: 'AdminSite',
+        component: () => import('@/views/admin/site/index.vue'),
+        meta: { title: '站点管理', requiresAuth: true, requiresAdmin: true, hideHeader: true, hideFooter: true }
+      },
+      {
+        path: 'logs',
+        name: 'AdminLogs',
+        component: () => import('@/views/admin/logs/index.vue'),
+        meta: { title: '日志查看', requiresAuth: true, requiresAdmin: true, hideHeader: true, hideFooter: true }
+      },
+      {
+        path: 'images',
+        name: 'AdminImages',
+        component: () => import('@/views/admin/images/index.vue'),
+        meta: { title: '图片管理', requiresAuth: true, requiresAdmin: true, hideHeader: true, hideFooter: true }
+      },
+      {
+        path: 'upload',
+        name: 'AdminUpload',
+        component: () => import('@/views/admin/upload/index.vue'),
+        meta: { title: '图片上传', requiresAuth: true, requiresAdmin: true, hideHeader: true, hideFooter: true }
+      }
+    ]
   },
   {
     path: '/403',
