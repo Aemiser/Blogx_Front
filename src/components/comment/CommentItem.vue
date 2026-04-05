@@ -51,13 +51,16 @@
       <!-- 回复表单 -->
       <Transition name="slide">
         <div v-if="showReplyForm" class="reply-form">
-          <textarea
-            v-model="replyContent"
-            class="reply-form__input"
-            :placeholder="`回复 ${comment.nickName}...`"
-            rows="2"
-            @keydown.ctrl.enter="submitReply"
-          ></textarea>
+          <div class="reply-form__input-wrapper">
+            <textarea
+              v-model="replyContent"
+              class="reply-form__input"
+              :placeholder="`回复 ${comment.nickName}...`"
+              rows="2"
+              @keydown.ctrl.enter="submitReply"
+            ></textarea>
+            <EPicker @select="handleEmojiSelect" />
+          </div>
           <div class="reply-form__footer">
             <span class="reply-form__hint">Ctrl + Enter 发送</span>
             <div class="reply-form__btns">
@@ -101,6 +104,7 @@ import { createComment, diggComment } from '@/api/modules/comment'
 import { formatRelativeTime } from '@/utils'
 import { useUserStore } from '@/stores/user'
 import BAvatar from '@/components/base/BAvatar/index.vue'
+import EPicker from '@/components/base/EPicker/index.vue'
 
 const props = defineProps<{
   comment: CommentTreeNode
@@ -122,6 +126,10 @@ const replyContent = ref('')
 const submitting = ref(false)
 // 根评论默认展开，子评论默认收缩
 const isExpanded = ref(!props.isReply)
+
+function handleEmojiSelect(emoji: string) {
+  replyContent.value += emoji
+}
 
 function toggleExpand() {
   isExpanded.value = !isExpanded.value
@@ -280,6 +288,21 @@ async function handleDigg() {
   border-radius: $radius-md;
   padding: $space-3;
 
+  &__input-wrapper {
+    position: relative;
+    
+    .reply-form__input {
+      width: 100%;
+      padding-right: 44px;
+    }
+    
+    :deep(.emoji-picker) {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+    }
+  }
+  
   &__input {
     width: 100%;
     padding: $space-2 $space-3;
