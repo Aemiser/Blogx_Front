@@ -24,6 +24,18 @@ const emit = defineEmits<{
 
 const contentRef = ref<HTMLElement | null>(null)
 
+// 生成锚点 ID（GitHub 标准，与 TableOfContents.vue 保持一致）
+function generateSlug(text: string): string {
+  let slug = text
+    .replace(/<[^>]+>/g, '') // 移除 HTML 标签
+    .replace(/[\s\u3000]+/g, '-') // 各类空格 → -
+    .replace(/[(){}[\],.!?;:'"\\/`~@#$%^&*+=|<>]/g, '') // 移除标点
+    .replace(/-+/g, '-') // 多个 - 合并
+    .replace(/^-|-$/g, '') // 移除首尾 -
+  
+  return slug || 'heading'
+}
+
 // 配置 marked
 marked.setOptions({
   breaks: true,
@@ -38,7 +50,7 @@ const renderedContent = computed(() => {
   const renderer = new marked.Renderer()
   
   // 自定义代码块渲染 - 我们将在挂载后替换为 Vue 组件
-  renderer.code = function(code, language) {
+  renderer.code = function(code: any, language: any) {
     const codeText = typeof code === 'object' ? code.text : code
     const lang = typeof code === 'object' ? code.lang : language
     
@@ -46,11 +58,11 @@ const renderedContent = computed(() => {
     return `<div class="code-block-placeholder" data-language="${lang || ''}">${escapeHtml(codeText)}</div>`
   }
   
-  // 自定义标题渲染 - 添加 ID
-  renderer.heading = function(text, level) {
+  // 自定义标题渲染 - 使用统一的 generateSlug
+  renderer.heading = function(text: any, level: any) {
     const textStr = typeof text === 'object' ? text.text : text
     const levelNum = typeof text === 'object' ? text.depth : level
-    const id = `heading-${levelNum}-${textStr.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-')}`
+    const id = generateSlug(textStr)
     return `<h${levelNum} id="${id}">${textStr}</h${levelNum}>`
   }
   

@@ -1,17 +1,29 @@
 <template>
-  <div class="sidebar-card table-of-contents" v-if="headings.length > 0">
+  <div class="sidebar-card table-of-contents" v-if="tocTree.length > 0">
     <h4 class="sidebar-card__title">目录</h4>
     <nav class="toc-nav">
-      <a
-        v-for="heading in headings"
-        :key="heading.id"
-        :href="`#${heading.id}`"
-        class="toc-item"
-        :class="[`toc-item--${heading.level}`, { active: activeId === heading.id }]"
-        @click.prevent="scrollToHeading(heading.id)"
-      >
-        {{ heading.text }}
-      </a>
+      <template v-for="item in tocTree" :key="item.id">
+        <a
+          :href="`#${item.id}`"
+          class="toc-item"
+          :class="[`toc-item--${item.level}`, { active: activeId === item.id }]"
+          @click.prevent="scrollToHeading(item.id)"
+        >
+          {{ item.text }}
+        </a>
+        <template v-if="item.children && item.children.length > 0">
+          <a
+            v-for="child in item.children"
+            :key="child.id"
+            :href="`#${child.id}`"
+            class="toc-item"
+            :class="[`toc-item--${child.level}`, { active: activeId === child.id }]"
+            @click.prevent="scrollToHeading(child.id)"
+          >
+            {{ child.text }}
+          </a>
+        </template>
+      </template>
     </nav>
   </div>
 
@@ -133,16 +145,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { ArticleDetail, Collection } from '@/types'
 import { diggArticle, collectArticle, getCollectionList, saveCollection } from '@/api/modules/article'
 import { useUserStore } from '@/stores/user'
 
-interface Heading {
+interface TocItem {
   id: string
   text: string
   level: number
+  children?: TocItem[]
 }
 
 const props = defineProps<{
@@ -152,8 +165,12 @@ const props = defineProps<{
 
 const router = useRouter()
 const userStore = useUserStore()
-const headings = ref<Heading[]>([])
+const headings = ref<TocItem[]>([])
 const activeId = ref('')
+let headingElements: HTMLElement[] = []
+let observer: IntersectionObserver | null = null
+
+const SCROLL_OFFSET = -40 // 顶部偏移量（固定导航栏高度）
 
 // 收藏夹弹窗相关
 const isCollectDialogOpen = ref(false)
@@ -165,48 +182,205 @@ const isCreatingCollection = ref(false)
 const newCollectionName = ref('')
 const newCollectionAbstract = ref('')
 
-function parseHeadings(content: string) {
-  const headingRegex = /^(#{1,6})\s+(.+)$/gm
-  const result: Heading[] = []
-  let match
-
-  while ((match = headingRegex.exec(content)) !== null) {
-    const level = match[1].length
-    const text = match[2].trim()
-    const id = text
-      .toLowerCase()
-      .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
-      .replace(/^-|-$/g, '')
-
-    result.push({ id, text, level })
-  }
-
-  headings.value = result
+// 生成锚点 ID（GitHub 标准）
+function generateSlug(text: string): string {
+  let slug = text
+    .replace(/<[^>]+>/g, '') // 移除 HTML 标签
+    .replace(/[\s\u3000]+/g, '-') // 各类空格 → -
+    .replace(/[(){}[\],.!?;:'"\\/`~@#$%^&*+=|<>]/g, '') // 移除标点
+    .replace(/-+/g, '-') // 多个 - 合并
+    .replace(/^-|-$/g, '') // 移除首尾 -
+  
+  return slug || 'heading'
 }
 
-function scrollToHeading(id: string) {
-  const element = document.getElementById(id)
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    activeId.value = id
+// 提取目录（自动检测最大标题级别）
+function extractToc(markdown: string): TocItem[] {
+  const result: TocItem[] = []
+  const usedIds = new Map<string, number>()
+  
+  // 移除代码块（```...```）避免匹配代码中的标题
+  const cleanMarkdown = markdown.replace(/```[\s\S]*?```/g, '').replace(/`[^`]+`/g, '')
+  
+  // 按行分割，逐行匹配
+  const lines = cleanMarkdown.split('\n')
+  
+  let minLevel = 6 // 记录最小的标题级别（最大的数字）
+  
+  // 第一遍：找到最小的标题级别
+  for (const line of lines) {
+    const match = line.match(/^(#{2,6})\s+(.+)$/)
+    if (match) {
+      const level = match[1].length
+      if (level < minLevel) {
+        minLevel = level
+      }
+    }
   }
-}
-
-function updateActiveHeading() {
-  const headingElements = headings.value.map(h => document.getElementById(h.id))
-  const scrollTop = window.scrollY + 100
-
-  for (let i = headingElements.length - 1; i >= 0; i--) {
-    const element = headingElements[i]
-    if (element && element.offsetTop <= scrollTop) {
-      activeId.value = headings.value[i].id
-      return
+  
+  // 第二遍：提取标题，相对级别转换
+  for (const line of lines) {
+    const match = line.match(/^(#{2,6})\s+(.+)$/)
+    if (match) {
+      const rawLevel = match[1].length
+      const text = match[2].trim()
+      
+      if (!text) continue // 跳过空标题
+      
+      // 将级别转换为从 1 开始的相对级别
+      const level = rawLevel - minLevel + 1
+      
+      let id = generateSlug(text)
+      // 处理重复 ID
+      if (usedIds.has(id)) {
+        const count = usedIds.get(id)! + 1
+        usedIds.set(id, count)
+        id = `${id}-${count}`
+      } else {
+        usedIds.set(id, 0)
+      }
+      
+      result.push({ id, text, level })
     }
   }
 
-  if (headings.value.length > 0) {
-    activeId.value = headings.value[0].id
+  return result
+}
+
+// 构建树形结构
+function buildTree(items: TocItem[]): TocItem[] {
+  const tree: TocItem[] = []
+  const stack: TocItem[] = []
+
+  for (const item of items) {
+    const node: TocItem = { ...item, children: [] }
+    
+    while (stack.length > 0 && stack[stack.length - 1].level >= item.level) {
+      stack.pop()
+    }
+
+    if (stack.length === 0) {
+      tree.push(node)
+    } else {
+      const parent = stack[stack.length - 1]
+      if (!parent.children) {
+        parent.children = []
+      }
+      parent.children.push(node)
+    }
+    
+    stack.push(node)
   }
+
+  return tree
+}
+
+// 扁平化树结构（用于渲染）
+function flattenTree(items: TocItem[], result: TocItem[] = []): TocItem[] {
+  for (const item of items) {
+    result.push(item)
+    if (item.children && item.children.length > 0) {
+      flattenTree(item.children, result)
+    }
+  }
+  return result
+}
+
+// 树形目录结构
+const tocTree = computed(() => buildTree(headings.value))
+
+// 解析标题
+function parseHeadings(content: string) {
+  const rawHeadings = extractToc(content)
+  headings.value = rawHeadings
+  
+  // 延迟等待 DOM 更新后设置观察者
+  setTimeout(() => {
+    setupObserver()
+  }, 100)
+}
+
+// 设置 IntersectionObserver（带重试）
+function setupObserver() {
+  // 清理旧的观察者
+  if (observer) {
+    observer.disconnect()
+  }
+
+  // 多次尝试获取标题元素
+  const trySetup = (retryCount = 0): HTMLElement[] => {
+    const elements = headings.value
+      .map(h => document.getElementById(h.id))
+      .filter((el): el is HTMLElement => el !== null)
+    
+    // 如果没有元素且还有重试次数，等待后重试
+    if (elements.length === 0 && retryCount < 3) {
+      setTimeout(() => trySetup(retryCount + 1), 100)
+      return []
+    }
+    
+    return elements
+  }
+  
+  headingElements = trySetup()
+
+  if (headingElements.length === 0) return
+
+  observer = new IntersectionObserver(
+    (entries) => {
+      // 找到最靠近视口顶部的可见标题
+      const visibleEntries = entries
+        .filter(e => e.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+
+      if (visibleEntries.length > 0) {
+        activeId.value = visibleEntries[0].target.id
+      }
+    },
+    {
+      rootMargin: `-${SCROLL_OFFSET + 50}px 0px -70% 0px`,
+      threshold: 0
+    }
+  )
+
+  headingElements.forEach(el => observer!.observe(el))
+}
+
+// 平滑滚动到标题（带偏移量）
+function scrollToHeading(id: string) {
+  let element = document.getElementById(id)
+  
+  // 如果找不到元素，尝试通过文本内容查找
+  if (!element) {
+    const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6')
+    for (const heading of allHeadings) {
+      const headingText = heading.textContent?.trim()
+      if (headingText && generateSlug(headingText) === id) {
+        element = heading as HTMLElement
+        break
+      }
+    }
+  }
+  
+  // 如果都找不到，直接跳转到 URL hash
+  if (!element) {
+    const hashId = window.location.hash.slice(1)
+    if (hashId !== id) {
+      window.location.hash = id
+    }
+    return
+  }
+
+  const top = element.offsetTop - SCROLL_OFFSET
+  window.scrollTo({
+    top,
+    behavior: 'smooth'
+  })
+  
+  activeId.value = id
+  
+  // 更新 URL（不跳转）
+  history.pushState(null, '', `#${id}`)
 }
 
 async function fetchCollections() {
@@ -368,13 +542,33 @@ watch(() => props.content, (newContent) => {
 }, { immediate: true })
 
 onMounted(() => {
-  window.addEventListener('scroll', updateActiveHeading)
-  updateActiveHeading()
+  setupObserver()
+  
+  // 监听 hash 变化
+  window.addEventListener('hashchange', handleHashChange)
+  
+  // 初始检查 URL hash
+  if (window.location.hash) {
+    const id = window.location.hash.slice(1)
+    if (headings.value.some(h => h.id === id)) {
+      activeId.value = id
+    }
+  }
 })
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', updateActiveHeading)
+  if (observer) {
+    observer.disconnect()
+  }
+  window.removeEventListener('hashchange', handleHashChange)
 })
+
+function handleHashChange() {
+  const id = window.location.hash.slice(1)
+  if (id && headings.value.some(h => h.id === id)) {
+    activeId.value = id
+  }
+}
 </script>
 
 <style scoped lang="scss">
