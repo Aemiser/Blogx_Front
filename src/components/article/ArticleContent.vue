@@ -276,6 +276,14 @@ onMounted(() => {
   margin: 1em 0;
 }
 
+/* iframe 视频嵌入 */
+.article-markdown-body iframe {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 1em 0;
+}
+
 /* 链接样式 */
 .article-markdown-body a {
   color: #89b4fa;
