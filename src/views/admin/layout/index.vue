@@ -3,7 +3,13 @@
     <aside class="admin-sidebar">
       <div class="sidebar-header">
         <router-link to="/admin" class="logo">
-          <span class="logo-icon">⚡</span>
+          <div class="logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
           <span class="logo-text">管理后台</span>
         </router-link>
       </div>
@@ -12,7 +18,14 @@
         <div class="nav-section">
           <div class="nav-section-title">概览</div>
           <router-link to="/admin" class="nav-item" :class="{ active: route.path === '/admin' }">
-            <span class="nav-icon">📊</span>
+            <span class="nav-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+              </svg>
+            </span>
             <span class="nav-text">数据统计</span>
           </router-link>
         </div>
@@ -20,15 +33,34 @@
         <div class="nav-section">
           <div class="nav-section-title">内容管理</div>
           <router-link to="/admin/users" class="nav-item" :class="{ active: route.path === '/admin/users' }">
-            <span class="nav-icon">👥</span>
+            <span class="nav-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </span>
             <span class="nav-text">用户管理</span>
           </router-link>
           <router-link to="/admin/articles" class="nav-item" :class="{ active: route.path === '/admin/articles' }">
-            <span class="nav-icon">📝</span>
+            <span class="nav-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </span>
             <span class="nav-text">文章管理</span>
           </router-link>
           <router-link to="/admin/articles/examine" class="nav-item" :class="{ active: route.path === '/admin/articles/examine' }">
-            <span class="nav-icon">✅</span>
+            <span class="nav-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </span>
             <span class="nav-text">文章审核</span>
           </router-link>
         </div>
@@ -36,19 +68,43 @@
         <div class="nav-section">
           <div class="nav-section-title">系统设置</div>
           <router-link to="/admin/site" class="nav-item" :class="{ active: route.path === '/admin/site' }">
-            <span class="nav-icon">⚙️</span>
+            <span class="nav-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </span>
             <span class="nav-text">站点管理</span>
           </router-link>
           <router-link to="/admin/images" class="nav-item" :class="{ active: route.path === '/admin/images' }">
-            <span class="nav-icon">🖼️</span>
+            <span class="nav-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </span>
             <span class="nav-text">图片管理</span>
           </router-link>
           <router-link to="/admin/upload" class="nav-item" :class="{ active: route.path === '/admin/upload' }">
-            <span class="nav-icon">📤</span>
+            <span class="nav-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </span>
             <span class="nav-text">图片上传</span>
           </router-link>
           <router-link to="/admin/logs" class="nav-item" :class="{ active: route.path === '/admin/logs' }">
-            <span class="nav-icon">📋</span>
+            <span class="nav-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </span>
             <span class="nav-text">日志查看</span>
           </router-link>
         </div>
@@ -56,7 +112,10 @@
       
       <div class="sidebar-footer">
         <router-link to="/" class="back-link">
-          <span>←</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+          </svg>
           <span>返回前台</span>
         </router-link>
       </div>
@@ -66,7 +125,11 @@
       <header class="admin-header">
         <div class="header-title">{{ pageTitle }}</div>
         <div class="header-actions">
-          <span class="admin-info">管理员: {{ userStore.userInfo?.nickname }}</span>
+          <div class="admin-avatar">
+            <img v-if="userStore.userInfo?.avatar" :src="userStore.userInfo.avatar" alt="avatar" />
+            <span v-else>{{ userStore.userInfo?.nickname?.[0]?.toUpperCase() }}</span>
+          </div>
+          <span class="admin-name">{{ userStore.userInfo?.nickname }}</span>
         </div>
       </header>
       
@@ -101,12 +164,12 @@ const pageTitle = computed(() => {
 .admin-layout {
   display: flex;
   min-height: 100vh;
-  background: #f8fafc;
+  background: #f1f5f9;
 }
 
 .admin-sidebar {
-  width: 240px;
-  background: #1e293b;
+  width: 260px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
   color: #e2e8f0;
   display: flex;
   flex-direction: column;
@@ -118,44 +181,51 @@ const pageTitle = computed(() => {
 }
 
 .sidebar-header {
-  padding: 20px 16px;
-  border-bottom: 1px solid #334155;
+  padding: 20px 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-decoration: none;
   color: inherit;
   
   .logo-icon {
-    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
   }
   
   .logo-text {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
   }
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: 16px 0;
+  padding: 20px 12px;
   overflow-y: auto;
 }
 
 .nav-section {
-  padding: 0 12px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   
   &-title {
     font-size: 11px;
     text-transform: uppercase;
     color: #64748b;
     padding: 0 12px;
-    margin-bottom: 8px;
-    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    letter-spacing: 0.08em;
+    font-weight: 500;
   }
 }
 
@@ -163,75 +233,84 @@ const pageTitle = computed(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
   color: #94a3b8;
   text-decoration: none;
   transition: all 0.2s ease;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   
   &:hover {
-    background: #334155;
+    background: rgba(255, 255, 255, 0.06);
     color: #e2e8f0;
   }
   
   &.active {
-    background: #3b82f6;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
     color: #fff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
   }
   
   .nav-icon {
-    font-size: 16px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .nav-text {
     font-size: 14px;
+    font-weight: 500;
   }
 }
 
 .sidebar-footer {
-  padding: 16px;
-  border-top: 1px solid #334155;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .back-link {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   color: #64748b;
   text-decoration: none;
-  font-size: 13px;
-  transition: color 0.2s;
+  font-size: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  transition: all 0.2s;
   
   &:hover {
+    background: rgba(255, 255, 255, 0.06);
     color: #e2e8f0;
   }
 }
 
 .admin-main {
   flex: 1;
-  margin-left: 240px;
+  margin-left: 260px;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
 .admin-header {
-  height: 60px;
+  height: 64px;
   background: #fff;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  position: fixed;
+  padding: 0 28px;
+  position: sticky;
   top: 0;
-  left: 240px;
-  right: 0;
   z-index: 50;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .header-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   color: #1e293b;
 }
@@ -239,17 +318,40 @@ const pageTitle = computed(() => {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
-.admin-info {
-  font-size: 13px;
-  color: #64748b;
+.admin-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  span {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
+
+.admin-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
 }
 
 .admin-content {
   flex: 1;
-  padding: 24px;
-  margin-top: 60px;
+  padding: 24px 28px;
 }
 </style>

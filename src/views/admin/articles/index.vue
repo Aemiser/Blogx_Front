@@ -6,6 +6,13 @@
         <span class="article-count">共 {{ total }} 篇文章</span>
       </div>
       <div class="header-right">
+        <select v-model="statusFilter" class="status-filter" @change="handleStatusChange">
+          <option :value="undefined">全部状态</option>
+          <option :value="1">草稿</option>
+          <option :value="2">待审核</option>
+          <option :value="3">已发布</option>
+          <option :value="4">已拒绝</option>
+        </select>
         <input 
           v-model="searchKeyword" 
           type="text" 
@@ -68,10 +75,14 @@
                 </span>
               </td>
               <td>{{ formatDate(article.createdAt) }}</td>
-              <td>
+                <td>
                 <div class="action-buttons">
                   <button class="action-btn" @click="viewArticle(article.id)">查看</button>
-                  <button class="action-btn danger" @click="deleteArticle(article.id)">删除</button>
+                  <template v-if="article.status === 2">
+                    <button class="action-btn success" @click="approveArticle(article.id)">通过</button>
+                    <button class="action-btn danger" @click="openRejectModal(article.id)">拒绝</button>
+                  </template>
+                  <button v-else class="action-btn danger" @click="deleteArticle(article.id)">删除</button>
                 </div>
               </td>
             </tr>
@@ -159,6 +170,32 @@
         </div>
       </div>
     </div>
+    
+    <div v-if="showRejectModal" class="modal-overlay" @click="closeRejectModal">
+      <div class="reject-modal" @click.stop>
+        <div class="modal-header">
+          <h3>拒绝文章</h3>
+          <button class="close-btn" @click="closeRejectModal">×</button>
+        </div>
+        <div class="modal-body">
+          <p class="reject-tip">请输入拒绝理由：</p>
+          <textarea 
+            v-model="rejectMsg" 
+            class="reject-input" 
+            placeholder="请输入拒绝理由..."
+            rows="4"
+          ></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @click="closeRejectModal">取消</button>
+          <button class="btn btn-danger" @click="confirmReject">确认拒绝</button>
+        </div>
+      </div>
+    </div>
+    
+    <div v-if="toast.show" class="toast" :class="toast.type">
+      <span>{{ toast.message }}</span>
+    </div>
   </div>
 </template>
 
@@ -166,7 +203,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { Article } from '@/types'
-import { getArticleList, adminDeleteArticle } from '@/api/modules/article'
+import { getArticleList, adminDeleteArticle, examineArticle } from '@/api/modules/article'
 import { getUserBase } from '@/api/modules/user'
 
 const router = useRouter()
@@ -180,25 +217,50 @@ const previewImageUrl = ref('')
 const showAuthorModal = ref(false)
 const authorInfo = ref<{ nickName: string; avatar: string; userID: number } | null>(null)
 const selectedAuthorDetail = ref<any>(null)
+const showRejectModal = ref(false)
+const rejectMsg = ref('')
+const rejectingArticleId = ref<number | null>(null)
+const statusFilter = ref<number | undefined>(undefined)
+const toast = ref({
+  show: false,
+  message: '',
+  type: 'success'
+})
+
+function showToast(message: string, type: 'success' | 'error' = 'success') {
+  toast.value = { show: true, message, type }
+  setTimeout(() => {
+    toast.value.show = false
+  }, 3000)
+}
 
 const totalPages = computed(() => Math.ceil(total.value / limit.value))
 
 async function fetchArticles() {
   try {
-    const res = await getArticleList({
+    const params: any = {
       type: 3,
       page: page.value,
       limit: limit.value,
       key: searchKeyword.value || undefined
-    })
-    articles.value = res.data.list
-    total.value = res.data.count
+    }
+    if (statusFilter.value !== undefined) {
+      params.status = statusFilter.value
+    }
+    const res = await getArticleList(params)
+    articles.value = res.data.list || []
+    total.value = res.data.count || 0
   } catch (error) {
     console.error('Failed to fetch articles:', error)
   }
 }
 
 function handleSearch() {
+  page.value = 1
+  fetchArticles()
+}
+
+function handleStatusChange() {
   page.value = 1
   fetchArticles()
 }
@@ -268,9 +330,50 @@ async function deleteArticle(id: number) {
     await adminDeleteArticle([id])
     articles.value = articles.value.filter(a => a.id !== id)
     total.value--
-    alert('删除成功')
+    showToast('删除成功')
   } catch (error) {
     console.error('Delete failed:', error)
+  }
+}
+
+async function approveArticle(id: number) {
+  try {
+    await examineArticle({ articleID: id, status: 3 })
+    const article = articles.value.find(a => a.id === id)
+    if (article) article.status = 3
+    showToast('审核通过')
+  } catch (error) {
+    console.error('Approve failed:', error)
+  }
+}
+
+function openRejectModal(id: number) {
+  rejectingArticleId.value = id
+  rejectMsg.value = ''
+  showRejectModal.value = true
+}
+
+function closeRejectModal() {
+  showRejectModal.value = false
+  rejectMsg.value = ''
+  rejectingArticleId.value = null
+}
+
+async function confirmReject() {
+  if (!rejectingArticleId.value) return
+  try {
+    await examineArticle({ 
+      articleID: rejectingArticleId.value, 
+      status: 4, 
+      msg: rejectMsg.value 
+    })
+    const article = articles.value.find(a => a.id === rejectingArticleId.value)
+    if (article) article.status = 4
+    closeRejectModal()
+    showToast('已拒绝')
+  } catch (error) {
+    console.error('Reject failed:', error)
+    showToast('操作失败', 'error')
   }
 }
 
@@ -315,6 +418,20 @@ onMounted(() => {
   border-radius: 8px;
   font-size: 14px;
   width: 240px;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+}
+
+.status-filter {
+  padding: 8px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+  cursor: pointer;
   
   &:focus {
     outline: none;
@@ -713,5 +830,84 @@ onMounted(() => {
 
 .article-cover {
   cursor: pointer;
+}
+
+.reject-modal {
+  width: 450px;
+  background: #fff;
+  border-radius: 12px;
+  max-width: 90vw;
+}
+
+.reject-tip {
+  margin: 0 0 12px;
+  color: #374151;
+  font-size: 14px;
+}
+
+.reject-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  resize: vertical;
+  font-family: inherit;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: #fff;
+  
+  &:hover {
+    background: #dc2626;
+  }
+}
+
+.action-btn.success {
+  color: #10b981;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: toastIn 0.3s ease;
+  
+  &.success {
+    background: #10b981;
+    color: #fff;
+  }
+  
+  &.error {
+    background: #ef4444;
+    color: #fff;
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 </style>

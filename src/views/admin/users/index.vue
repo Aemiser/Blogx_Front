@@ -6,31 +6,37 @@
         <span class="user-count">共 {{ total }} 用户</span>
       </div>
       <div class="header-right">
-        <input 
-          v-model="searchKeyword" 
-          type="text" 
-          class="search-input" 
-          placeholder="搜索用户..."
-          @keyup.enter="handleSearch"
-        />
+        <div class="search-box">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input 
+            v-model="searchKeyword" 
+            type="text" 
+            class="search-input" 
+            placeholder="搜索用户..."
+            @keyup.enter="handleSearch"
+          />
+        </div>
       </div>
     </div>
     
-    <div class="card">
+    <div class="content-card">
       <div class="table-wrapper">
-        <table class="table">
+        <table class="data-table">
           <thead>
             <tr>
-              <th style="width: 50px">ID</th>
+              <th style="width: 60px">ID</th>
               <th style="width: 60px">头像</th>
-              <th style="width: 100px">昵称</th>
-              <th style="width: 90px">用户名</th>
-              <th style="width: 60px">文章数</th>
-              <th style="width: 70px">角色</th>
-              <th style="width: 110px">IP</th>
-              <th style="width: 100px">地址</th>
-              <th style="width: 140px">注册时间</th>
-              <th style="width: 140px">最后登录</th>
+              <th style="width: 120px">昵称</th>
+              <th style="width: 100px">用户名</th>
+              <th style="width: 70px">文章数</th>
+              <th style="width: 80px">角色</th>
+              <th style="width: 120px">IP</th>
+              <th style="width: 120px">地址</th>
+              <th style="width: 160px">注册时间</th>
+              <th style="width: 160px">最后登录</th>
               <th style="width: 100px">操作</th>
             </tr>
           </thead>
@@ -44,21 +50,22 @@
                 </div>
               </td>
               <td class="nickname-cell" @click="viewUserDetail(user)">{{ user.nickname }}</td>
-              <td>{{ user.username || '-' }}</td>
+              <td class="text-muted">{{ user.username || '-' }}</td>
               <td>{{ user.articleCount }}</td>
               <td>
                 <span class="tag" :class="getRoleClass(user.role)">
                   {{ getRoleName(user.role) }}
                 </span>
               </td>
-              <td>{{ user.ip || '-' }}</td>
-              <td>{{ user.addr || '-' }}</td>
+              <td class="text-muted">{{ user.ip || '-' }}</td>
+              <td class="text-muted">{{ user.addr || '-' }}</td>
               <td>{{ formatDate(user.createdAt) }}</td>
               <td>{{ formatDate(user.lastLoginDate) }}</td>
               <td>
                 <div class="action-buttons">
                   <button class="action-btn" @click="viewUser(user)">查看</button>
                   <button class="action-btn" @click="editUser(user)">编辑</button>
+                  <button class="action-btn danger" @click="deleteUser(user.id)">删除</button>
                 </div>
               </td>
             </tr>
@@ -67,10 +74,15 @@
       </div>
       
       <div v-if="users.length === 0" class="empty-state">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <line x1="23" y1="11" x2="17" y2="11"/>
+        </svg>
         <p>暂无用户数据</p>
       </div>
       
-      <div v-if="total > 0" class="pagination">
+      <div v-if="total > limit" class="pagination">
         <div class="pagination-info">
           共 {{ total }} 条，第 {{ page }}/{{ totalPages }} 页
         </div>
@@ -80,94 +92,6 @@
           <button class="page-btn" :disabled="page >= totalPages" @click="goToPage(page + 1)">下一页</button>
           <button class="page-btn" :disabled="page >= totalPages" @click="goToPage(totalPages)">末页</button>
         </div>
-      </div>
-    </div>
-    
-    <div v-if="showEditModal" class="modal-overlay" @click="showEditModal = false">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>编辑用户</h3>
-          <button class="close-btn" @click="showEditModal = false">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>昵称</label>
-            <input v-model="editForm.nickname" type="text" class="form-input" />
-          </div>
-          <div class="form-group">
-            <label>角色</label>
-            <select v-model="editForm.role" class="form-select">
-              <option :value="1">普通用户</option>
-              <option :value="2">管理员</option>
-              <option :value="3">已封禁</option>
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" @click="showEditModal = false">取消</button>
-          <button class="btn btn-primary" @click="saveUser">保存</button>
-        </div>
-      </div>
-    </div>
-    
-    <div v-if="showDetailModal" class="modal-overlay" @click="showDetailModal = false">
-      <div class="modal-content modal-detail" @click.stop>
-        <div class="modal-header">
-          <h3>用户详情</h3>
-          <button class="close-btn" @click="showDetailModal = false">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="detail-avatar" @click="selectedUserDetail?.avatar && previewAvatar(selectedUserDetail.avatar)">
-            <img v-if="selectedUserDetail?.avatar" :src="selectedUserDetail.avatar" alt="avatar" />
-            <span v-else class="avatar-placeholder">{{ selectedUserDetail?.nickname?.[0]?.toUpperCase() }}</span>
-          </div>
-          <div class="detail-info">
-            <div class="detail-item">
-              <span class="detail-label">昵称</span>
-              <span class="detail-value">{{ selectedUserDetail?.nickname }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">用户名</span>
-              <span class="detail-value">{{ selectedUserDetail?.username || '-' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">角色</span>
-              <span class="tag" :class="getRoleClass(selectedUserDetail?.role)">
-                {{ getRoleName(selectedUserDetail?.role) }}
-              </span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">文章数</span>
-              <span class="detail-value">{{ selectedUserDetail?.articleCount }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">IP</span>
-              <span class="detail-value">{{ selectedUserDetail?.ip || '-' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">地址</span>
-              <span class="detail-value">{{ selectedUserDetail?.addr || '-' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">注册时间</span>
-              <span class="detail-value">{{ formatDate(selectedUserDetail?.createdAt) }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">最后登录</span>
-              <span class="detail-value">{{ formatDate(selectedUserDetail?.lastLoginDate) }}</span>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" @click="showDetailModal = false">关闭</button>
-        </div>
-      </div>
-    </div>
-    
-    <div v-if="showAvatarPreview" class="modal-overlay" @click="showAvatarPreview = false">
-      <div class="avatar-preview-modal" @click.stop>
-        <img :src="previewAvatarUrl" alt="avatar" />
-        <button class="close-preview" @click="showAvatarPreview = false">×</button>
       </div>
     </div>
   </div>
@@ -293,7 +217,7 @@ onMounted(() => {
 .admin-users {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .page-header {
@@ -309,7 +233,7 @@ onMounted(() => {
 }
 
 .page-title {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 600;
   color: #1e293b;
 }
@@ -319,23 +243,47 @@ onMounted(() => {
   color: #64748b;
 }
 
+.header-right {
+  display: flex;
+  gap: 12px;
+}
+
+.search-box {
+  position: relative;
+  
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+  }
+}
+
 .search-input {
-  padding: 8px 16px;
+  padding: 10px 14px 10px 42px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
-  width: 240px;
+  width: 260px;
+  background: #fff;
+  transition: all 0.2s;
   
   &:focus {
     outline: none;
     border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  &::placeholder {
+    color: #94a3b8;
   }
 }
 
-.card {
+.content-card {
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   overflow: hidden;
 }
 
@@ -343,112 +291,56 @@ onMounted(() => {
   overflow-x: auto;
 }
 
-.table {
+.data-table {
   width: 100%;
   border-collapse: collapse;
   
   th, td {
-    padding: 10px 8px;
+    padding: 14px 12px;
     text-align: left;
     border-bottom: 1px solid #f1f5f9;
   }
   
   th {
-    font-weight: 500;
-    color: #64748b;
     font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     background: #f8fafc;
   }
   
   td {
-    font-size: 13px;
+    font-size: 14px;
     color: #1e293b;
   }
   
-  tbody tr:hover {
-    background: #f8fafc;
+  tbody tr {
+    transition: background 0.2s;
+    
+    &:hover {
+      background: #f8fafc;
+    }
   }
 }
 
-.user-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: #e2e8f0;
-  cursor: pointer;
-  
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .avatar-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    font-size: 14px;
-    font-weight: 500;
-    color: #64748b;
-  }
-}
-
-.nickname-cell {
-  font-weight: 500;
-  cursor: pointer;
-  
-  &:hover {
-    color: #3b82f6;
-  }
-}
-
-.tag {
-  display: inline-block;
-  padding: 4px 10px;
-  font-size: 12px;
-  border-radius: 4px;
-  
-  &--default {
-    background: #f1f5f9;
-    color: #64748b;
-  }
-  
-  &--primary {
-    background: rgba(59, 130, 246, 0.1);
-    color: #3b82f6;
-  }
-  
-  &--error {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-  }
-}
-
-.action-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.action-btn {
-  padding: 4px 8px;
-  font-size: 13px;
-  color: #3b82f6;
-  background: none;
-  border: none;
-  cursor: pointer;
-  
-  &:hover {
-    text-decoration: underline;
-  }
+.text-muted {
+  color: #64748b;
 }
 
 .empty-state {
-  padding: 40px;
+  padding: 60px;
   text-align: center;
   color: #94a3b8;
+  
+  svg {
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+  
+  p {
+    font-size: 15px;
+  }
 }
 
 .pagination {
@@ -470,17 +362,19 @@ onMounted(() => {
 }
 
 .page-btn {
-  padding: 6px 12px;
+  padding: 8px 14px;
   font-size: 13px;
   border: 1px solid #e2e8f0;
   background: #fff;
   color: #64748b;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s;
   
   &:hover:not(:disabled) {
     border-color: #3b82f6;
     color: #3b82f6;
+    background: #f8fafc;
   }
   
   &:disabled {
@@ -496,6 +390,7 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -504,21 +399,23 @@ onMounted(() => {
 
 .modal-content {
   background: #fff;
-  border-radius: 12px;
+  border-radius: 16px;
   width: 480px;
   max-width: 90vw;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  padding: 20px 24px;
   border-bottom: 1px solid #f1f5f9;
   
   h3 {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
+    margin: 0;
   }
 }
 
@@ -528,6 +425,8 @@ onMounted(() => {
   font-size: 24px;
   color: #94a3b8;
   cursor: pointer;
+  padding: 0;
+  line-height: 1;
   
   &:hover {
     color: #1e293b;
@@ -535,47 +434,25 @@ onMounted(() => {
 }
 
 .modal-body {
-  padding: 20px;
-}
-
-.form-group {
-  margin-bottom: 16px;
-  
-  label {
-    display: block;
-    font-size: 14px;
-    color: #64748b;
-    margin-bottom: 8px;
-  }
-}
-
-.form-input, .form-select {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 14px;
-  
-  &:focus {
-    outline: none;
-    border-color: #3b82f6;
-  }
+  padding: 24px;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 20px;
+  padding: 16px 24px;
   border-top: 1px solid #f1f5f9;
 }
 
 .btn {
   padding: 10px 20px;
   font-size: 14px;
+  font-weight: 500;
   border-radius: 8px;
   cursor: pointer;
   border: none;
+  transition: all 0.2s;
   
   &-secondary {
     background: #f1f5f9;
@@ -594,10 +471,138 @@ onMounted(() => {
       background: #2563eb;
     }
   }
+  
+  &-danger {
+    background: #ef4444;
+    color: #fff;
+    
+    &:hover {
+      background: #dc2626;
+    }
+  }
 }
 
-.modal-detail {
-  width: 400px;
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+  cursor: pointer;
+  transition: transform 0.2s;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+  }
+}
+
+.nickname-cell {
+  font-weight: 500;
+  color: #3b82f6;
+  cursor: pointer;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.tag {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  
+  &--default {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+  
+  &--primary {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+  }
+  
+  &--error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+  
+  &--success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #3b82f6;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: rgba(59, 130, 246, 0.1);
+  }
+  
+  &.danger {
+    color: #ef4444;
+    
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+  }
+}
+
+.form-group {
+  margin-bottom: 16px;
+  
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+  }
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
 }
 
 .detail-avatar {
@@ -605,7 +610,7 @@ onMounted(() => {
   height: 80px;
   border-radius: 50%;
   overflow: hidden;
-  background: #e2e8f0;
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
   margin: 0 auto 20px;
   
   img {
@@ -621,7 +626,7 @@ onMounted(() => {
     width: 100%;
     height: 100%;
     font-size: 28px;
-    font-weight: 500;
+    font-weight: 600;
     color: #64748b;
   }
 }
@@ -629,13 +634,13 @@ onMounted(() => {
 .detail-info {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
 }
 
 .detail-item {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 10px 0;
   border-bottom: 1px solid #f1f5f9;
   
   &:last-child {
@@ -662,7 +667,7 @@ onMounted(() => {
   img {
     max-width: 100%;
     max-height: 90vh;
-    border-radius: 8px;
+    border-radius: 12px;
   }
 }
 
@@ -674,10 +679,6 @@ onMounted(() => {
   border: none;
   font-size: 32px;
   color: #fff;
-  cursor: pointer;
-}
-
-.detail-avatar {
   cursor: pointer;
 }
 </style>

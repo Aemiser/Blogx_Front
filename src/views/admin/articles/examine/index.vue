@@ -54,7 +54,7 @@
                   <button 
                     v-if="article.status === 2" 
                     class="action-btn danger" 
-                    @click="rejectArticle(article.id)"
+                    @click="openRejectModal(article.id)"
                   >
                     拒绝
                   </button>
@@ -69,6 +69,32 @@
         <p>暂无待审核文章</p>
       </div>
     </div>
+    
+    <div v-if="showRejectModal" class="modal-overlay" @click="closeRejectModal">
+      <div class="reject-modal" @click.stop>
+        <div class="modal-header">
+          <h3>拒绝文章</h3>
+          <button class="close-btn" @click="closeRejectModal">×</button>
+        </div>
+        <div class="modal-body">
+          <p class="reject-tip">请输入拒绝理由：</p>
+          <textarea 
+            v-model="rejectMsg" 
+            class="reject-input" 
+            placeholder="请输入拒绝理由..."
+            rows="4"
+          ></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @click="closeRejectModal">取消</button>
+          <button class="btn btn-danger" @click="confirmReject">确认拒绝</button>
+        </div>
+      </div>
+    </div>
+    
+    <div v-if="toast.show" class="toast" :class="toast.type">
+      <span>{{ toast.message }}</span>
+    </div>
   </div>
 </template>
 
@@ -81,6 +107,21 @@ import { getArticleList, examineArticle } from '@/api/modules/article'
 const router = useRouter()
 const articles = ref<Article[]>([])
 const statusFilter = ref(2)
+const showRejectModal = ref(false)
+const rejectMsg = ref('')
+const rejectingArticleId = ref<number | null>(null)
+const toast = ref({
+  show: false,
+  message: '',
+  type: 'success'
+})
+
+function showToast(message: string, type: 'success' | 'error' = 'success') {
+  toast.value = { show: true, message, type }
+  setTimeout(() => {
+    toast.value.show = false
+  }, 3000)
+}
 
 const filteredArticles = computed(() => {
   if (statusFilter.value === 0) return articles.value
@@ -134,32 +175,48 @@ function viewArticle(id: number) {
 }
 
 async function approveArticle(id: number) {
-  if (!confirm('确定通过这篇审核吗？')) return
-  
   try {
     await examineArticle({ articleID: id, status: 3 })
     const index = articles.value.findIndex(a => a.id === id)
     if (index !== -1) {
       articles.value[index].status = 3
     }
-    alert('审核通过')
+    showToast('审核通过')
   } catch (error) {
     console.error('Approve failed:', error)
+    showToast('操作失败', 'error')
   }
 }
 
-async function rejectArticle(id: number) {
-  if (!confirm('确定拒绝这篇审核吗？')) return
-  
+function openRejectModal(id: number) {
+  rejectingArticleId.value = id
+  rejectMsg.value = ''
+  showRejectModal.value = true
+}
+
+function closeRejectModal() {
+  showRejectModal.value = false
+  rejectMsg.value = ''
+  rejectingArticleId.value = null
+}
+
+async function confirmReject() {
+  if (!rejectingArticleId.value) return
   try {
-    await examineArticle({ articleID: id, status: 4 })
-    const index = articles.value.findIndex(a => a.id === id)
+    await examineArticle({ 
+      articleID: rejectingArticleId.value, 
+      status: 4, 
+      msg: rejectMsg.value 
+    })
+    const index = articles.value.findIndex(a => a.id === rejectingArticleId.value)
     if (index !== -1) {
       articles.value[index].status = 4
     }
-    alert('已拒绝')
+    closeRejectModal()
+    showToast('已拒绝')
   } catch (error) {
     console.error('Reject failed:', error)
+    showToast('操作失败', 'error')
   }
 }
 
@@ -322,5 +379,146 @@ onMounted(() => {
   padding: 40px;
   text-align: center;
   color: #94a3b8;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.reject-modal {
+  width: 450px;
+  background: #fff;
+  border-radius: 12px;
+  max-width: 90vw;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+  }
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  
+  &:hover {
+    color: #64748b;
+  }
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.reject-tip {
+  margin: 0 0 12px;
+  color: #374151;
+  font-size: 14px;
+}
+
+.reject-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  resize: vertical;
+  font-family: inherit;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  
+  &-secondary {
+    background: #f1f5f9;
+    color: #64748b;
+    
+    &:hover {
+      background: #e2e8f0;
+    }
+  }
+  
+  &-danger {
+    background: #ef4444;
+    color: #fff;
+    
+    &:hover {
+      background: #dc2626;
+    }
+  }
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: toastIn 0.3s ease;
+  
+  &.success {
+    background: #10b981;
+    color: #fff;
+  }
+  
+  &.error {
+    background: #ef4444;
+    color: #fff;
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 </style>

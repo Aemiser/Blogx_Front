@@ -172,11 +172,75 @@
               <Switch v-model="siteForm.article.noExamine" />
             </div>
           </div>
+          <div class="form-row single">
+            <div class="form-group">
+              <label class="form-label">评论层级</label>
+              <select v-model="siteForm.article.commentline" class="form-select">
+                <option :value="1">1级</option>
+                <option :value="2">2级</option>
+                <option :value="3">3级</option>
+                <option :value="4">4级</option>
+                <option :value="5">5级</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
       
       <div class="form-actions">
         <button class="btn btn-primary" @click="saveSiteInfo">保存设置</button>
+      </div>
+    </div>
+    
+    <div v-else-if="activeTab === 'image'" class="settings-content">
+      <div class="settings-card">
+        <div class="card-header">
+          <h3 class="card-title">图片配置</h3>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">文件大小限制</label>
+              <div class="input-with-unit">
+                <input v-model.number="imageForm.size" type="number" class="form-input" />
+                <select v-model="imageForm.type" class="form-select unit-select">
+                  <option value="kb">KB</option>
+                  <option value="mb">MB</option>
+                  <option value="gb">GB</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">存储目录</label>
+              <input v-model="imageForm.imageDir" type="text" class="form-input" placeholder="如: images" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">允许上传的类型</label>
+              <div class="tag-list">
+                <div class="tag-item" v-for="ext in imageForm.writeList" :key="ext">
+                  <span>{{ ext }}</span>
+                  <button type="button" class="tag-delete" @click="removeWriteList(ext)">×</button>
+                </div>
+                <div class="tag-add">
+                  <input 
+                    v-model="newExtension" 
+                    type="text" 
+                    class="tag-input" 
+                    placeholder="输入扩展名"
+                    @keyup.enter="addWriteList"
+                  />
+                  <button type="button" class="add-btn" @click="addWriteList">添加</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button class="btn btn-primary" @click="saveImageConfig">保存设置</button>
       </div>
     </div>
     
@@ -187,10 +251,6 @@
         </div>
         <div class="card-body">
           <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">SMTP域名</label>
-              <input v-model="emailForm.domain" type="text" class="form-input" />
-            </div>
             <div class="form-group">
               <label class="form-label">端口</label>
               <input v-model="emailForm.port" type="number" class="form-input" />
@@ -203,10 +263,14 @@
               <label class="form-label">授权码</label>
               <input v-model="emailForm.AuthCode" type="password" class="form-input" />
             </div>
+          </div>
+          <div class="form-row">
             <div class="form-group">
               <label class="form-label">发送昵称</label>
               <input v-model="emailForm.sendNickname" type="text" class="form-input" />
             </div>
+          </div>
+          <div class="switch-grid">
             <div class="switch-item">
               <div class="switch-info">
                 <span class="switch-label">SSL</span>
@@ -356,12 +420,15 @@ import {
   getQiniuConfig,
   updateQiniuConfig,
   getAIConfig,
-  updateAIConfig
+  updateAIConfig,
+  getImageConfig,
+  updateImageConfig
 } from '@/api/modules/site'
 import Switch from '@/components/base/Switch/index.vue'
 
 const tabs = [
   { label: '站点', value: 'site' },
+  { label: '图片', value: 'image' },
   { label: '邮箱', value: 'email' },
   { label: 'QQ登录', value: 'qq' },
   { label: '七牛云', value: 'qiniu' },
@@ -376,7 +443,7 @@ const siteForm = ref({
   seo: { keywords: '', description: '' },
   about: { siteDate: '', qq: '', wechat: '', gitee: '', github: '', bilibili: '' },
   login: { qqLogin: false, usernamePwdLogin: false, emailLogin: false, captcha: false },
-  article: { noExamine: false }
+  article: { noExamine: false, commentline: 3 }
 })
 
 const emailForm = ref({
@@ -412,10 +479,38 @@ const aiForm = ref({
   avatar: ''
 })
 
+const imageForm = ref({
+  size: 3,
+  type: 'mb' as 'kb' | 'mb' | 'gb',
+  writeList: [] as string[],
+  imageDir: ''
+})
+
+const newExtension = ref('')
+
+function addWriteList() {
+  const ext = newExtension.value.trim().toLowerCase()
+  if (ext && !imageForm.value.writeList.includes(ext)) {
+    imageForm.value.writeList.push(ext)
+  }
+  newExtension.value = ''
+}
+
+function removeWriteList(ext: string) {
+  const index = imageForm.value.writeList.indexOf(ext)
+  if (index > -1) {
+    imageForm.value.writeList.splice(index, 1)
+  }
+}
+
 async function fetchSiteInfo() {
   try {
     const res = await getSiteInfo()
-    siteForm.value = res.data
+    const data = res.data
+    if (data.article && data.article.commentline === undefined) {
+      data.article.commentline = 3
+    }
+    siteForm.value = data as any
   } catch (error) {
     console.error('Failed to fetch site info:', error)
   }
@@ -511,11 +606,38 @@ watch(() => activeTab.value, (newTab) => {
     fetchQiniuConfig()
   } else if (newTab === 'ai') {
     fetchAIConfig()
+  } else if (newTab === 'image') {
+    fetchImageConfig()
   }
 })
 
+async function fetchImageConfig() {
+  try {
+    const res = await getImageConfig()
+    const data = res.data
+    imageForm.value = {
+      size: data.Size ?? 3,
+      type: (data.Type as 'kb' | 'mb' | 'gb') ?? 'mb',
+      writeList: data.WriteList ?? [],
+      imageDir: data.ImageDir ?? ''
+    }
+  } catch (error) {
+    console.error('Failed to fetch image config:', error)
+  }
+}
+
+async function saveImageConfig() {
+  try {
+    await updateImageConfig(imageForm.value)
+    alert('保存成功')
+  } catch (error) {
+    console.error('Save failed:', error)
+  }
+}
+
 onMounted(() => {
   fetchSiteInfo()
+  fetchImageConfig()
 })
 </script>
 
@@ -603,6 +725,11 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+  
+  &.single {
+    grid-template-columns: repeat(1, 1fr);
+    margin-top: 16px;
+  }
   
   &.is-disabled {
     opacity: 0.5;
@@ -705,6 +832,135 @@ onMounted(() => {
     &:active {
       transform: translateY(0);
     }
+  }
+}
+
+.input-with-unit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  .form-input {
+    flex: 1;
+  }
+  
+  .unit-select {
+    width: 80px;
+    padding: 10px 8px;
+    font-size: 14px;
+  }
+  
+  .unit {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 500;
+  }
+}
+
+.checkbox-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.tag-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #e0f2fe;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #0369a1;
+}
+
+.tag-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  background: rgba(3, 105, 161, 0.2);
+  color: #0369a1;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: rgba(3, 105, 161, 0.4);
+  }
+}
+
+.tag-add {
+  display: flex;
+  gap: 8px;
+}
+
+.tag-input {
+  width: 120px;
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+}
+
+.add-btn {
+  padding: 6px 14px;
+  border: none;
+  background: #3b82f6;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #2563eb;
+  }
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #f1f5f9;
+  }
+  
+  input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+  
+  span {
+    font-size: 13px;
+    color: #475569;
+    font-weight: 500;
   }
 }
 </style>
