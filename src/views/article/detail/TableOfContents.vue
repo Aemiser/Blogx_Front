@@ -384,11 +384,16 @@ function scrollToHeading(id: string) {
 }
 
 async function fetchCollections() {
-  if (!userStore.isLoggedIn) return
-  
   try {
-    const res = await getCollectionList({ type: 1, page: 1, limit: 100 }) // type: 1 for own collections
+    const res = await getCollectionList({ type: 1, page: 1, limit: 100 })
     collections.value = res.data.list || []
+    
+    // 如果没有收藏夹，创建一个默认收藏夹
+    if (collections.value.length === 0) {
+      await saveCollection({ title: '我的收藏', abstract: '默认收藏夹' })
+      const res2 = await getCollectionList({ type: 1, page: 1, limit: 100 })
+      collections.value = res2.data.list || []
+    }
     
     // 如果有默认收藏夹，自动选中
     const defaultCollection = collections.value.find(c => c.isDefault)
