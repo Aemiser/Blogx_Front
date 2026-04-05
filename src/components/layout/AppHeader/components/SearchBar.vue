@@ -24,12 +24,12 @@
         @keyup.enter="handleSearch"
       />
     </div>
+
         <button class="search-btn" @click="handleSearch" title="搜索">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"/>
         <path d="M21 21l-4.35-4.35"/>
       </svg>
-      <span>搜索</span>
     </button>
     <AiChat v-model:visible="showAiChat" />
   </div>
@@ -66,27 +66,20 @@ function handleSearch() {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  width: 36px;
   height: 36px;
-  padding: 0 $space-4;
-  border: 1px solid $primary;
+  border: 1px solid $border;
   border-radius: $radius-full;
-  background: $primary;
-  color: white;
-  font-size: $text-sm;
-  font-weight: $font-weight-medium;
+  background: $bg-card;
+  color: $text-secondary;
   cursor: pointer;
   transition: all $duration-fast;
   flex-shrink: 0;
-  white-space: nowrap;
   
   &:hover {
-    background: $primary-dark;
-    border-color: $primary-dark;
-  }
-  
-  &:active {
-    transform: scale(0.98);
+    border-color: $primary;
+    color: $primary;
+    background: rgba($primary, 0.05);
   }
 }
 
