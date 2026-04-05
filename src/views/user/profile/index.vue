@@ -149,15 +149,14 @@
               </div>
             </div>
             
-            <div v-else-if="error" class="collections-error">
+            <div v-else-if="collectionsError" class="collections-error">
               <div class="error">
                 <svg class="error__icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <circle cx="12" cy="12" r="10"/>
                   <line x1="12" y1="8" x2="12" y2="12"/>
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                <p>{{ error }}</p>
-                <button class="retry-btn" @click="fetchCollections">重试</button>
+                <p>{{ collectionsError }}</p>
               </div>
             </div>
             
@@ -190,15 +189,14 @@
               </div>
             </div>
             
-            <div v-else-if="error" class="users-error">
+            <div v-else-if="followingError" class="users-error">
               <div class="error">
                 <svg class="error__icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <circle cx="12" cy="12" r="10"/>
                   <line x1="12" y1="8" x2="12" y2="12"/>
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                <p>{{ error }}</p>
-                <button class="retry-btn" @click="fetchFollowing">重试</button>
+                <p>{{ followingError }}</p>
               </div>
             </div>
             
@@ -241,15 +239,14 @@
               </div>
             </div>
             
-            <div v-else-if="error" class="users-error">
+            <div v-else-if="fansError" class="users-error">
               <div class="error">
                 <svg class="error__icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <circle cx="12" cy="12" r="10"/>
                   <line x1="12" y1="8" x2="12" y2="12"/>
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                <p>{{ error }}</p>
-                <button class="retry-btn" @click="fetchFans">重试</button>
+                <p>{{ fansError }}</p>
               </div>
             </div>
             
@@ -315,6 +312,9 @@ const limit = 10
 const total = ref(0)
 const error = ref<string | null>(null)
 const followingLoading = ref(false)
+const followingError = ref<string | null>(null)
+const fansError = ref<string | null>(null)
+const collectionsError = ref<string | null>(null)
 
 const isLoggedIn = computed(() => userStore.isLoggedIn)
 const currentUserId = computed(() => userStore.userInfo?.id)
@@ -426,7 +426,7 @@ async function fetchCollections() {
   if (!id) return
   
   loading.value = true
-  error.value = null
+  collectionsError.value = null
   
   try {
     const res = await getCollectionList({
@@ -435,10 +435,10 @@ async function fetchCollections() {
       page: 1,
       limit: 20
     })
-    collections.value = res.data.list
-  } catch (err) {
+    collections.value = res.data?.list || []
+  } catch (err: any) {
     console.error('Failed to fetch collections:', err)
-    error.value = '加载收藏夹失败，请稍后重试'
+    collectionsError.value = err.message || '该用户未开放收藏'
   } finally {
     loading.value = false
   }
@@ -449,14 +449,14 @@ async function fetchFollowing() {
   if (!id) return
   
   loading.value = true
-  error.value = null
+  followingError.value = null
   
   try {
     const res = await getFollowingList(id)
-    following.value = res.data.list
-  } catch (err) {
+    following.value = res.data?.list || []
+  } catch (err: any) {
     console.error('Failed to fetch following:', err)
-    error.value = '加载关注列表失败，请稍后重试'
+    followingError.value = err.message || '该用户未开放关注列表'
   } finally {
     loading.value = false
   }
@@ -467,14 +467,14 @@ async function fetchFans() {
   if (!id) return
   
   loading.value = true
-  error.value = null
+  fansError.value = null
   
   try {
     const res = await getFansList(id)
-    fans.value = res.data.list
-  } catch (err) {
+    fans.value = res.data?.list || []
+  } catch (err: any) {
     console.error('Failed to fetch fans:', err)
-    error.value = '加载粉丝列表失败，请稍后重试'
+    fansError.value = err.message || '该用户未开放粉丝列表'
   } finally {
     loading.value = false
   }
