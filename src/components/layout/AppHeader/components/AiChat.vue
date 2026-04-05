@@ -1,9 +1,15 @@
 <template>
   <Teleport to="body">
-    <div v-if="visible" class="ai-chat-overlay" @click.self="close">
+    <div 
+      v-if="visible" 
+      class="ai-chat-overlay" 
+      :class="{ 'ai-chat-overlay--pinned': isPinned }"
+      @click.self="handleOverlayClick"
+    >
       <div 
         ref="dialogRef"
         class="ai-chat"
+        :class="{ 'ai-chat--pinned': isPinned }"
         :style="{ left: position.x + 'px', top: position.y + 'px' }"
       >
         <div class="ai-chat__header" @mousedown="startDrag">
@@ -16,12 +22,24 @@
             </svg>
             AI 助手
           </div>
-          <button class="ai-chat__close" @click="close">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
+          <div class="ai-chat__header-actions">
+            <button 
+              class="ai-chat__pin-btn" 
+              :class="{ 'is-pinned': isPinned }"
+              @click="togglePin"
+              title="置顶"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v6m0 0l-2-2m2 2l2-2M5 12h14m-7 7v-7m0 0l-2 2m2-2l2 2"/>
+              </svg>
+            </button>
+            <button class="ai-chat__close" @click="close">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
         </div>
         
         <div class="ai-chat__messages" ref="messagesRef">
@@ -92,6 +110,7 @@ const dialogRef = ref<HTMLElement>()
 const messagesRef = ref<HTMLElement>()
 const inputText = ref('')
 const isLoading = ref(false)
+const isPinned = ref(false)
 
 interface Message {
   role: 'user' | 'ai'
@@ -111,8 +130,19 @@ function close() {
   emit('update:visible', false)
 }
 
+function handleOverlayClick() {
+  if (!isPinned.value) {
+    close()
+  }
+}
+
+function togglePin() {
+  isPinned.value = !isPinned.value
+}
+
 function startDrag(e: MouseEvent) {
   if ((e.target as HTMLElement).closest('.ai-chat__close')) return
+  if ((e.target as HTMLElement).closest('.ai-chat__action')) return
   isDragging = true
   dragOffset = {
     x: e.clientX - position.value.x,
@@ -254,7 +284,13 @@ watch(() => props.visible, (val) => {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.3);
+  transition: background $duration-fast;
+  
+  &--pinned {
+    background: transparent;
+    pointer-events: none;
+  }
 }
 
 .ai-chat {
@@ -268,6 +304,11 @@ watch(() => props.visible, (val) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  
+  &--pinned {
+    border-color: $primary;
+    box-shadow: 0 0 0 2px rgba($primary, 0.2), $shadow-xl;
+  }
   z-index: 1001;
   
   &__header {
@@ -290,6 +331,35 @@ watch(() => props.visible, (val) => {
     color: $text-primary;
     
     svg {
+      color: $primary;
+    }
+  }
+  
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+  }
+  
+  &__pin-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    border-radius: $radius-sm;
+    color: $text-tertiary;
+    cursor: pointer;
+    transition: all $duration-fast;
+    
+    &:hover {
+      background: $bg-hover;
+      color: $text-primary;
+    }
+    
+    &.is-pinned {
       color: $primary;
     }
   }
