@@ -36,6 +36,7 @@ export interface SiteInfo {
   }
   article: {
     noExamine: boolean
+    commentline?: number
   }
 }
 
@@ -127,6 +128,16 @@ export interface AIConfig {
   secretKey: string
   nickname: string
   avatar: string
+}
+
+/**
+ * 图片配置
+ */
+export interface ImageConfig {
+  size: number
+  type: string
+  writeList: string[]
+  imageDir: string
 }
 
 /**

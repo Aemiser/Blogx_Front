@@ -5,7 +5,8 @@ import type {
   EmailConfig,
   QQConfig,
   QiniuConfig,
-  AIConfig
+  AIConfig,
+  ImageConfig
 } from '@/types'
 
 /**
@@ -24,6 +25,27 @@ export function getSiteInfo() {
 export function updateSiteInfo(data: UpdateSiteInfoParams) {
   return request<any>({
     url: '/api/site/site',
+    method: 'PUT',
+    data
+  })
+}
+
+/**
+ * 图片配置
+ */
+export function getImageConfig() {
+  return request<ImageConfig>({
+    url: '/api/site/image',
+    method: 'GET'
+  })
+}
+
+/**
+ * 更新图片配置
+ */
+export function updateImageConfig(data: Partial<ImageConfig>) {
+  return request<any>({
+    url: '/api/site/image',
     method: 'PUT',
     data
   })

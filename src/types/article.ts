@@ -38,6 +38,7 @@ export interface ArticleDetail extends Article {
   categoryTitlt: string | null
   isDigg: boolean
   isCollect: boolean
+  collectID: number
 }
 
 /**
@@ -82,6 +83,7 @@ export interface ArticleListParams {
 export interface ArticleExamineParams {
   articleID: number
   status: ArticleStatus
+  msg?: string
 }
 
 /**
