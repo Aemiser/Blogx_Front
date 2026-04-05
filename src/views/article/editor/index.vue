@@ -13,6 +13,7 @@
         </div>
         <div class="header-right">
           <button 
+            v-if="userStore.isAdmin"
             class="ai-optimize-btn" 
             :disabled="aiOptimizing || !content.trim()"
             @click="handleAiOptimize"
@@ -125,7 +126,14 @@
                 </button>
               </div>
             </div>
-            <div v-else class="cover-placeholder" @click="triggerCoverUpload">
+            <div v-else 
+              class="cover-placeholder" 
+              :class="{ 'is-dragover': isDragging }"
+              @click="triggerCoverUpload"
+              @dragover.prevent="isDragging = true"
+              @dragleave="isDragging = false"
+              @drop.prevent="handleCoverDrop"
+            >
               <input
                 ref="coverInput"
                 type="file"
@@ -135,15 +143,18 @@
               />
               <div v-if="coverUploading" class="cover-loading">
                 <div class="cover-spinner"></div>
-                <span>上传中...</span>
+                <span>{{ coverProgress > 0 ? `上传中 ${coverProgress}%` : '上传中...' }}</span>
+                <div v-if="coverProgress > 0" class="cover-progress">
+                  <div class="cover-progress-bar" :style="{ width: coverProgress + '%' }"></div>
+                </div>
               </div>
               <div v-else class="cover-add">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/>
-                  <polyline points="21 15 16 10 5 21"/>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
-                <span>点击上传封面</span>
+                <span>点击或拖拽上传封面</span>
               </div>
             </div>
           </div>
@@ -188,7 +199,7 @@
               <polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
             <span v-if="publishing || coverUploading" class="btn-loading"></span>
-            <span>{{ coverUploading ? '封面上传中...' : publishing ? '发布中...' : '发布文章' }}</span>
+            <span>{{ coverUploading ? '封面上传中...' : publishing ? (isEdit ? '更新中...' : '发布中...') : (isEdit ? '更新文章' : '发布文章') }}</span>
           </button>
         </div>
       </div>
@@ -198,18 +209,24 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { MdEditor, type ToolbarNames } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import type { CategoryOption } from '@/types'
-import { getCategoryOptions, createArticle } from '@/api/modules/article'
+import { getCategoryOptions, createArticle, updateArticle, getArticleDetail } from '@/api/modules/article'
 import { uploadImage } from '@/api/modules/banner'
 import { aiAnalysis, aiOptimizeArticle } from '@/api/modules/search'
 import { useThemeStore } from '@/stores/theme'
-import BButton from '@/components/base/BButton/index.vue'
+import { useUserStore } from '@/stores/user'
+import { toast } from '@/composables/useToast'
 
 const router = useRouter()
+const route = useRoute()
 const themeStore = useThemeStore()
+const userStore = useUserStore()
+
+const isEdit = computed(() => !!route.params.id)
+const articleId = computed(() => Number(route.params.id))
 
 const title = ref('')
 const content = ref('')
@@ -225,7 +242,9 @@ const canRevert = ref(false)
 const previousContent = ref('')
 const cover = ref('')
 const coverUploading = ref(false)
+const coverProgress = ref(0)
 const coverInput = ref<HTMLInputElement | null>(null)
+const isDragging = ref(false)
 
 // 发布按钮禁用状态：封面上传中或发布中
 const publishDisabled = computed(() => publishing.value || coverUploading.value)
@@ -322,7 +341,7 @@ async function handleAiOptimize() {
   previousContent.value = content.value
   aiOptimizing.value = true
   try {
-    const res = await aiOptimizeArticle(content.value)
+    const res = await aiOptimizeArticle(content.value) as any
     if (res.code === 0) {
       content.value = res.data
       canRevert.value = true
@@ -365,8 +384,8 @@ async function handleUploadImg(files: File[], callback: (urls: string[]) => void
   
   for (const file of files) {
     try {
-      const res = await uploadImage(file)
-      urls.push(baseUrl.replace(/\/$/, '') + '/' + res.data.replace(/^\//, ''))
+      const res = await uploadImage(file) as any
+      urls.push(baseUrl.replace(/\/$/, '') + '/' + String(res.data).replace(/^\//, ''))
     } catch (error) {
       console.error('Upload failed:', error)
     }
@@ -375,11 +394,31 @@ async function handleUploadImg(files: File[], callback: (urls: string[]) => void
   callback(urls)
 }
 
-// 封面上传统一入口
-async function uploadCover(file: File): Promise<string> {
-  const res = await uploadImage(file)
+// 封面上传
+async function uploadCover(file: File, onProgress?: (progress: number) => void): Promise<string> {
+  if (onProgress) {
+    onProgress(10)
+  }
+  
+  const res = await uploadImage(file) as any
+  
+  if (onProgress) {
+    onProgress(90)
+  }
+  
+  const dataPath = res.data
+  if (!dataPath) {
+    throw new Error('上传失败，未返回图片路径')
+  }
+  
   const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
-  return baseUrl.replace(/\/$/, '') + '/' + res.data.replace(/^\//, '')
+  const fullUrl = baseUrl.replace(/\/$/, '') + '/' + dataPath
+  
+  if (onProgress) {
+    onProgress(100)
+  }
+  
+  return fullUrl
 }
 
 function triggerCoverUpload() {
@@ -392,15 +431,45 @@ async function handleCoverChange(event: Event) {
   if (!file) return
   
   coverUploading.value = true
+  coverProgress.value = 0
   try {
-    cover.value = await uploadCover(file)
-  } catch (error) {
+    cover.value = await uploadCover(file, (p) => {
+      coverProgress.value = p
+    })
+  } catch (error: any) {
     console.error('Cover upload failed:', error)
-    alert('封面上传失败')
+    toast.error(error?.message || '封面上传失败')
   } finally {
     coverUploading.value = false
+    coverProgress.value = 0
     target.value = ''
   }
+}
+
+function handleCoverDrop(event: DragEvent) {
+  isDragging.value = false
+  const files = event.dataTransfer?.files
+  if (!files?.length) return
+  
+  const file = files[0]
+  if (!file.type.startsWith('image/')) {
+    toast.warning('请上传图片文件')
+    return
+  }
+  
+  coverUploading.value = true
+  coverProgress.value = 0
+  uploadCover(file, (p) => {
+    coverProgress.value = p
+  }).then(url => {
+    cover.value = url
+  }).catch((error: any) => {
+    console.error('Cover upload failed:', error)
+    toast.error(error?.message || '封面上传失败')
+  }).finally(() => {
+    coverUploading.value = false
+    coverProgress.value = 0
+  })
 }
 
 function removeCover() {
@@ -446,7 +515,7 @@ async function publishArticle() {
       .map(t => t.trim())
       .filter(Boolean)
     
-    await createArticle({
+    const articleData = {
       title: title.value,
       content: content.value,
       tagList,
@@ -455,11 +524,22 @@ async function publishArticle() {
       cover: cover.value || undefined,
       abstract: abstract.value,
       openComment: openComment.value
-    })
+    }
     
-    localStorage.removeItem('article_draft')
-    alert('发布成功')
-    router.push('/')
+    if (isEdit.value) {
+      await updateArticle({
+        id: articleId.value,
+        ...articleData
+      })
+      localStorage.removeItem('article_draft')
+      alert('更新成功')
+      router.push(`/article/${articleId.value}`)
+    } else {
+      await createArticle(articleData)
+      localStorage.removeItem('article_draft')
+      alert('发布成功')
+      router.push('/')
+    }
   } catch (error: any) {
     console.error('Publish failed:', error)
     alert(error.message || '发布失败')
@@ -485,10 +565,32 @@ function loadDraft() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   fetchCategories()
   loadDraft()
+  
+  if (isEdit.value) {
+    await fetchArticleData()
+  }
 })
+
+async function fetchArticleData() {
+  try {
+    const res = await getArticleDetail(articleId.value)
+    const article = res.data
+    title.value = article.title || ''
+    content.value = article.content || ''
+    categoryId.value = article.categoryID ?? undefined
+    tagsInput.value = article.tagList?.join(',') || ''
+    abstract.value = article.abstract || ''
+    openComment.value = article.openComment ?? true
+    cover.value = article.cover || ''
+  } catch (error) {
+    console.error('Failed to fetch article:', error)
+    toast.error('加载文章失败')
+    router.push('/center/articles')
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -759,6 +861,12 @@ onMounted(() => {
     background: rgba($primary, 0.05);
   }
   
+  &.is-dragover {
+    border-color: $primary;
+    background: rgba($primary, 0.1);
+    border-style: solid;
+  }
+  
   .cover-add {
     display: flex;
     flex-direction: column;
@@ -777,6 +885,7 @@ onMounted(() => {
     align-items: center;
     gap: $space-2;
     color: $primary;
+    width: 80%;
     
     .cover-spinner {
       width: 24px;
@@ -789,6 +898,22 @@ onMounted(() => {
     
     span {
       font-size: $text-xs;
+    }
+  }
+  
+  .cover-progress {
+    width: 100%;
+    height: 4px;
+    background: rgba($primary, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: $space-2;
+    
+    .cover-progress-bar {
+      height: 100%;
+      background: $primary;
+      border-radius: 2px;
+      transition: width 0.2s ease;
     }
   }
 }
@@ -1030,8 +1155,25 @@ onMounted(() => {
       background: rgba($primary, 0.1);
     }
     
+    &.is-dragover {
+      border-color: $primary;
+      background: rgba($primary, 0.15);
+    }
+    
     .cover-add {
       color: $dark-text-tertiary;
+    }
+    
+    .cover-loading {
+      color: $primary;
+      
+      .cover-spinner {
+        border-color: rgba($primary, 0.3);
+      }
+    }
+    
+    .cover-progress {
+      background: rgba($primary, 0.2);
     }
   }
 
