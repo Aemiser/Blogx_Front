@@ -20,50 +20,86 @@
           </div>
         </div>
       </div>
+      <div ref="loadMoreRef" class="load-more">
+        <span v-if="loading">加载中...</span>
+        <span v-else-if="hasMore">下拉加载更多</span>
+        <span v-else>没有更多了</span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { getCommentList, deleteComment as deleteCommentApi } from '@/api/modules/comment'
 import BButton from '@/components/base/BButton/index.vue'
 
 const userStore = useUserStore()
 const comments = ref<any[]>([])
+const loading = ref(false)
+const hasMore = ref(true)
+const page = ref(1)
+const loadMoreRef = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
 
 function formatDate(dateStr: string) {
   const date = new Date(dateStr)
   return date.toLocaleDateString('zh-CN')
 }
 
-async function fetchComments() {
+async function fetchComments(isLoadMore = false) {
+  if (loading.value) return
+  loading.value = true
   try {
     const res = await getCommentList({
       type: 2,
       articleID: 0,
-      page: 1,
+      page: page.value,
       limit: 20
     })
-    comments.value = res.data.list
+    if (isLoadMore) {
+      comments.value.push(...res.data.list)
+    } else {
+      comments.value = res.data.list
+    }
+    hasMore.value = res.data.list.length >= 20
+    if (hasMore.value) {
+      page.value++
+    }
   } catch (error) {
     console.error('Failed to fetch comments:', error)
+  } finally {
+    loading.value = false
   }
 }
 
-async function deleteComment(id: number) {
+function setupObserver() {
+  if (!loadMoreRef.value) return
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && hasMore.value && !loading.value) {
+      fetchComments(true)
+    }
+  }, { threshold: 0.1 })
+  observer.observe(loadMoreRef.value)
+}
+
+function deleteComment(id: number) {
   if (!confirm('确定要删除这条评论吗？')) return
-  try {
-    await deleteCommentApi(id)
+  deleteCommentApi(id).then(() => {
     fetchComments()
-  } catch (error) {
+  }).catch((error) => {
     console.error('Failed to delete comment:', error)
-  }
+  })
 }
 
 onMounted(() => {
   fetchComments()
+  setupObserver()
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
 })
 </script>
 
@@ -130,5 +166,12 @@ onMounted(() => {
   text-align: center;
   padding: $space-12;
   color: $text-tertiary;
+}
+
+.load-more {
+  text-align: center;
+  padding: $space-4;
+  color: $text-tertiary;
+  font-size: $text-sm;
 }
 </style>

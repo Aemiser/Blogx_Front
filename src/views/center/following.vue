@@ -7,10 +7,10 @@
       </div>
       <div v-else class="user-list">
         <div v-for="user in followingList" :key="user.focusUserID" class="user-item">
-          <div class="user-avatar">
+          <div class="user-avatar" @click="$router.push(`/user/${user.focusUserID}`)">
             <BAvatar :src="user.focusUserAvatar" :size="48" :alt="user.focusUserNickname" />
           </div>
-          <div class="user-info">
+          <div class="user-info" @click="$router.push(`/user/${user.focusUserID}`)">
             <h4 class="user-name">{{ user.focusUserNickname }}</h4>
             <p class="user-bio">{{ user.focusUserAbstract || '暂无简介' }}</p>
           </div>
@@ -92,11 +92,13 @@ onMounted(() => {
 
 .user-avatar {
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .user-info {
   flex: 1;
   min-width: 0;
+  cursor: pointer;
 }
 
 .user-name {

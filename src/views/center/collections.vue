@@ -4,6 +4,7 @@
       <aside class="collections-sidebar">
         <div class="sidebar-header">
           <h3 class="sidebar-title">收藏夹</h3>
+          <button class="add-folder-btn" @click="showCreateDialog = true" title="创建收藏夹">+</button>
         </div>
         <div class="folder-list">
           <div 
@@ -18,6 +19,12 @@
               <span class="folder-name">{{ collection.title }}</span>
               <span class="folder-count">{{ collection.ArticleCount }}</span>
             </div>
+            <button 
+              v-if="!collection.isDefault" 
+              class="delete-btn" 
+              @click.stop="deleteCollection(collection.id)"
+              title="删除"
+            >×</button>
           </div>
         </div>
       </aside>
@@ -61,17 +68,47 @@
         </div>
       </main>
     </div>
+
+    <!-- 创建收藏夹弹窗 -->
+    <div v-if="showCreateDialog" class="dialog-overlay" @click.self="showCreateDialog = false">
+      <div class="dialog">
+        <div class="dialog-header">
+          <h3>创建收藏夹</h3>
+          <span class="dialog-close" @click="showCreateDialog = false">&times;</span>
+        </div>
+        <div class="dialog-body">
+          <div class="form-group">
+            <label class="form-label">收藏夹名称</label>
+            <input v-model="newCollection.title" class="input" type="text" placeholder="请输入收藏夹名称" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">描述</label>
+            <textarea v-model="newCollection.abstract" class="textarea" placeholder="请输入描述" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button class="btn-cancel" @click="showCreateDialog = false">取消</button>
+          <button class="btn-confirm" @click="handleCreateCollection" :disabled="!newCollection.title.trim()">创建</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { getCollectionList, getArticleList } from '@/api/modules/article'
+import { ref, computed, reactive, onMounted } from 'vue'
+import { getCollectionList, getArticleList, saveCollection, deleteCollection as deleteCollectionApi } from '@/api/modules/article'
 
 const collections = ref<any[]>([])
 const selectedCollectionId = ref<number | null>(null)
 const articles = ref<any[]>([])
 const loading = ref(false)
+const showCreateDialog = ref(false)
+
+const newCollection = reactive({
+  title: '',
+  abstract: ''
+})
 
 const currentCollection = computed(() => {
   return collections.value.find(c => c.id === selectedCollectionId.value)
@@ -122,6 +159,40 @@ async function fetchArticles(collectId: number) {
   }
 }
 
+async function handleCreateCollection() {
+  if (!newCollection.title.trim()) return
+  
+  try {
+    await saveCollection({
+      title: newCollection.title,
+      abstract: newCollection.abstract
+    })
+    showCreateDialog.value = false
+    newCollection.title = ''
+    newCollection.abstract = ''
+    await fetchCollections()
+  } catch (error) {
+    console.error('Failed to create collection:', error)
+    alert('创建失败')
+  }
+}
+
+async function deleteCollection(id: number) {
+  if (!confirm('确定要删除这个收藏夹吗？')) return
+  
+  try {
+    await deleteCollectionApi({ idList: [id] })
+    if (selectedCollectionId.value === id) {
+      selectedCollectionId.value = null
+      articles.value = []
+    }
+    await fetchCollections()
+  } catch (error) {
+    console.error('Failed to delete collection:', error)
+    alert('删除失败')
+  }
+}
+
 onMounted(() => {
   fetchCollections()
 })
@@ -153,6 +224,25 @@ onMounted(() => {
   padding: $space-4;
   border-bottom: 1px solid #e3e5e7;
   background: #ebebeb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.add-folder-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: $primary;
+  color: white;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  font-size: $text-lg;
+  line-height: 1;
+  
+  &:hover {
+    background: $primary-dark;
+  }
 }
 
 .sidebar-title {
@@ -177,9 +267,14 @@ onMounted(() => {
   transition: all $duration-fast;
   margin-bottom: $space-1;
   background: transparent;
+  position: relative;
 
   &:hover {
     background: #e8e9eb;
+    
+    .delete-btn {
+      opacity: 1;
+    }
   }
 
   &.active {
@@ -193,6 +288,29 @@ onMounted(() => {
     .folder-count {
       background: rgba(255, 255, 255, 0.2);
     }
+  }
+}
+
+.delete-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: rgba(0, 0, 0, 0.1);
+  color: #666;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  opacity: 0;
+  transition: all $duration-fast;
+  
+  &:hover {
+    background: #f44336;
+    color: white;
   }
 }
 
@@ -327,5 +445,128 @@ onMounted(() => {
 .meta-item {
   font-size: $text-xs;
   color: $text-tertiary;
+}
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog {
+  background: #fff;
+  border-radius: $radius-lg;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $space-4 $space-5;
+  border-bottom: 1px solid #e3e5e7;
+
+  h3 {
+    font-size: $text-lg;
+    font-weight: $font-weight-semibold;
+    color: #18191c;
+  }
+}
+
+.dialog-close {
+  font-size: $text-2xl;
+  color: #9499a0;
+  cursor: pointer;
+  line-height: 1;
+  
+  &:hover {
+    color: #18191c;
+  }
+}
+
+.dialog-body {
+  padding: $space-5;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-3;
+  padding: $space-4 $space-5;
+  border-top: 1px solid #e3e5e7;
+}
+
+.form-group {
+  margin-bottom: $space-4;
+}
+
+.form-label {
+  display: block;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  margin-bottom: $space-2;
+  color: #61666d;
+}
+
+.input, .textarea {
+  width: 100%;
+  padding: $space-3;
+  border: 1px solid #e3e5e7;
+  border-radius: $radius-md;
+  font-size: $text-base;
+  color: #18191c;
+  background: #fff;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary;
+  }
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.btn-cancel, .btn-confirm {
+  padding: $space-2 $space-4;
+  border-radius: $radius-md;
+  font-size: $text-sm;
+  cursor: pointer;
+  transition: all $duration-fast;
+}
+
+.btn-cancel {
+  background: #f4f5f7;
+  border: none;
+  color: #61666d;
+  
+  &:hover {
+    background: #e3e5e7;
+  }
+}
+
+.btn-confirm {
+  background: $primary;
+  border: none;
+  color: white;
+  
+  &:hover {
+    background: $primary-dark;
+  }
+  
+  &:disabled {
+    background: #c9ccd0;
+    cursor: not-allowed;
+  }
 }
 </style>

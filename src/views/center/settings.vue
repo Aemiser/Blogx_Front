@@ -152,7 +152,7 @@
                 maxlength="6"
               />
               <BButton 
-                variant="outline" 
+                variant="secondary" 
                 size="sm" 
                 :disabled="countdown > 0"
                 @click="sendEmailCode"
