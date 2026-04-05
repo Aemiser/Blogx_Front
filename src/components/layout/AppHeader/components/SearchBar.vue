@@ -1,5 +1,14 @@
 <template>
   <div class="search-wrapper">
+        <button class="ai-tag" @click="showAiChat = true" title="AI 助手">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/>
+        <path d="M16 14H8a4 4 0 0 0-4 4v2h16v-2a4 4 0 0 0-4-4z"/>
+        <circle cx="9" cy="10" r="1"/>
+        <circle cx="15" cy="10" r="1"/>
+      </svg>
+      AI
+    </button>
     <div class="search-bar" :class="{ focused: isFocused }">
       <svg class="search-bar__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"/>
@@ -15,14 +24,12 @@
         @keyup.enter="handleSearch"
       />
     </div>
-    <button class="ai-tag" @click="showAiChat = true" title="AI 助手">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/>
-        <path d="M16 14H8a4 4 0 0 0-4 4v2h16v-2a4 4 0 0 0-4-4z"/>
-        <circle cx="9" cy="10" r="1"/>
-        <circle cx="15" cy="10" r="1"/>
+        <button class="search-btn" @click="handleSearch" title="搜索">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="M21 21l-4.35-4.35"/>
       </svg>
-      AI
+      <span>搜索</span>
     </button>
     <AiChat v-model:visible="showAiChat" />
   </div>
@@ -55,13 +62,41 @@ function handleSearch() {
   gap: $space-2;
 }
 
+.search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 $space-4;
+  border: 1px solid $primary;
+  border-radius: $radius-full;
+  background: $primary;
+  color: white;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all $duration-fast;
+  flex-shrink: 0;
+  white-space: nowrap;
+  
+  &:hover {
+    background: $primary-dark;
+    border-color: $primary-dark;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
 .search-bar {
   position: relative;
-  width: 200px;
+  width: 180px;
   transition: width $duration-normal $ease-default;
   
   &.focused {
-    width: 320px;
+    width: 280px;
   }
   
   &__icon {
