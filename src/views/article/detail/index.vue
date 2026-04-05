@@ -34,12 +34,15 @@
         <div class="article-comments card" v-if="article">
           <h3 class="comments-title">评论 ({{ article.commentCount }})</h3>
           <div class="comment-form">
-            <textarea
-                v-model="commentContent"
-                class="textarea"
-                placeholder="写下你的评论..."
-                rows="3"
-            ></textarea>
+            <div class="textarea-wrapper">
+              <textarea
+                  v-model="commentContent"
+                  class="textarea"
+                  placeholder="写下你的评论..."
+                  rows="3"
+              ></textarea>
+              <EPicker @select="handleEmojiSelect" />
+            </div>
             <BButton
                 variant="primary"
                 size="sm"
@@ -82,10 +85,12 @@ import 'highlight.js/styles/github-dark.css'
 import 'github-markdown-css'
 import type { ArticleDetail, CommentTreeNode } from '@/types'
 import { getArticleDetail, lookArticle } from '@/api/modules/article'
+import { getCollectionList } from '@/api/modules/article'
 import { getCommentTree, createComment } from '@/api/modules/comment'
 import { formatNumber, formatRelativeTime, formatDate } from '@/utils'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 import BButton from '@/components/base/BButton/index.vue'
+import EPicker from '@/components/base/EPicker/index.vue'
 import CommentItem from '@/components/comment/CommentItem.vue'
 import ArticleAuthor from './ArticleAuthor.vue'
 import TableOfContents from './TableOfContents.vue'
@@ -101,6 +106,9 @@ const comments = ref<CommentTreeNode[]>([])
 const commentContent = ref('')
 const submitting = ref(false)
 const articleBodyRef = ref<HTMLElement | null>(null)
+const showCollectDialog = ref(false)
+const collections = ref<Array<{ id: number; title: string; isDefault: boolean }>>([])
+const selectedCollectId = ref(0)
 
 const md = new MarkdownIt({
   html: true,
@@ -231,18 +239,26 @@ async function handleDigg() {
 }
 
 async function handleCollect() {
-  if (!userStore.isLoggedIn) {
-    router.push('/login')
-    return
-  }
+    if (!userStore.isLoggedIn) {
+        router.push('/login')
+        return
+    }
 
-  try {
-    await collectArticle({ articleID: article.value!.id, collectID: 0 })
-    article.value!.isCollect = !article.value!.isCollect
-    article.value!.collectCount += article.value!.isCollect ? 1 : -1
-  } catch (error) {
-    console.error('Failed to collect:', error)
-  }
+    try {
+        // Fetch user's collections
+        const res = await getCollectionList({ type: 1, UserID: 0, page: 1, limit: 100 })
+        collections.value = res.data.list.map(item => ({
+            id: item.id,
+            title: item.title,
+            isDefault: item.isDefault
+        }))
+        
+        // Show the collection selection dialog
+        showCollectDialog.value = true
+    } catch (error) {
+        console.error('Failed to fetch collections:', error)
+        alert('获取收藏夹列表失败，请稍后重试')
+    }
 }
 
 async function submitComment() {
@@ -281,6 +297,10 @@ function goProfile(id: number) {
   router.push(`/user/${id}`)
 }
 
+function handleEmojiSelect(emoji: string) {
+  commentContent.value += emoji
+}
+
 onMounted(() => {
   fetchArticle()
 })
@@ -290,19 +310,35 @@ onMounted(() => {
 .article-detail {
   padding: $space-6 0;
 
-  .app-container {
-    display: flex;
-    gap: $space-6;
-  }
+.app-container {
+  display: flex;
+  gap: $space-6;
+  position: relative;
+  z-index: 2; /* Match top navigation bar z-index */
+}
 
-  &__main {
-    flex: 1;
-    min-width: 0;
-  }
+&__main {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  /* Remove z-index from main content */
+}
 
-  &__content {
-    padding: $space-6;
-  }
+.app-content__sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 80px;
+  height: fit-content;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}
+
+&__content {
+  padding: $space-6;
+}
 }
 
 .article-head {
@@ -370,6 +406,18 @@ onMounted(() => {
     overflow-x: auto;
     border-radius: 8px;
     position: relative;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  :deep(iframe) {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    margin: 1em 0;
+    aspect-ratio: 16 / 9;
+    height: auto;
   }
 
   /* Ensure base text color for code blocks remains readable while preserving syntax highlighting */
