@@ -35,12 +35,15 @@ export function updateSiteMsgConf(data: UpdateSiteMsgConfParams) {
 
 /**
  * 站内信列表
+ * @param t 消息类型: 1-回复与评论(1,2), 2-点赞与收藏(3,5,7), 3-系统(9)
+ * @param page 页码
+ * @param pageSize 每页数量
  */
-export function getSiteMsgList(t?: 1 | 2 | 3) {
+export function getSiteMsgList(t?: 1 | 2 | 3, page = 1, pageSize = 20) {
   return request<PaginatedData<SiteMessage>>({
     url: '/api/site_msg',
     method: 'GET',
-    params: { t }
+    params: { t, page, page_size: pageSize }
   })
 }
 

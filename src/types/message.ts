@@ -52,6 +52,7 @@ export interface UnreadMessageCount {
   diggMsgCount: number
   systemMsgCount: number
   privateMsgCount: number
+  globalMsgCount: number
 }
 
 /**

@@ -183,6 +183,7 @@ export interface Collection {
   isDefault: boolean
   userID: number
   ArticleCount: number
+  articleList?: Article[]
 }
 
 /**
