@@ -78,11 +78,7 @@
                 <td>
                 <div class="action-buttons">
                   <button class="action-btn" @click="viewArticle(article.id)">查看</button>
-                  <template v-if="article.status === 2">
-                    <button class="action-btn success" @click="approveArticle(article.id)">通过</button>
-                    <button class="action-btn danger" @click="openRejectModal(article.id)">拒绝</button>
-                  </template>
-                  <button v-else class="action-btn danger" @click="deleteArticle(article.id)">删除</button>
+                  <button class="action-btn danger" @click="deleteArticle(article.id)">删除</button>
                 </div>
               </td>
             </tr>
@@ -244,8 +240,9 @@ async function fetchArticles() {
       limit: limit.value,
       key: searchKeyword.value || undefined
     }
-    if (statusFilter.value !== undefined) {
-      params.status = statusFilter.value
+    if (statusFilter.value !== undefined && statusFilter.value !== null) {
+      params.status = Number(statusFilter.value)
+      console.log('statusFilter value:', statusFilter.value, 'params.status:', params.status)
     }
     const res = await getArticleList(params)
     articles.value = res.data.list || []
