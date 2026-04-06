@@ -205,7 +205,7 @@ export function unfollowUser(focusUserID: number) {
  * 关注列表
  */
 export function getFollowingList(userID: number, key?: string) {
-  return request<PaginatedData<FocusUser>>({
+  return request<any>({
     url: '/api/focus/my_focus',
     method: 'GET',
     params: { userID, key }
@@ -216,7 +216,7 @@ export function getFollowingList(userID: number, key?: string) {
  * 粉丝列表
  */
 export function getFansList(userID: number) {
-  return request<PaginatedData<FansUser>>({
+  return request<any>({
     url: '/api/focus/my_fans',
     method: 'GET',
     params: { userID }
