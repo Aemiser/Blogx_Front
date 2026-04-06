@@ -14,7 +14,7 @@
               class="avatar-img" 
             />
             <div v-else class="avatar-placeholder">
-              <BAvatar :src="userInfo?.avatar" :size="80" />
+              <BAvatar :src="getAvatarUrl(userInfo?.avatar)" :size="80" />
             </div>
           </div>
           
@@ -175,6 +175,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { getUserDetail, updateUser, sendEmail, bindEmail } from '@/api/modules/user'
 import { uploadImage } from '@/api/modules/banner'
+import { getFullImageUrl, getAvatarUrl } from '@/utils/image'
 import BButton from '@/components/base/BButton/index.vue'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 
@@ -210,16 +211,6 @@ const privacyForm = reactive({
 
 function triggerUpload() {
   fileInput.value?.click()
-}
-
-function getFullImageUrl(path: string) {
-  if (!path) return ''
-  if (path.startsWith('http://') || path.startsWith('https://')) return path
-  
-  const baseUrl = window.location.origin
-  let fullPath = path.replace(/^\//, '')
-  
-  return baseUrl + '/' + fullPath
 }
 
 function getPathFromUrl(url: string) {

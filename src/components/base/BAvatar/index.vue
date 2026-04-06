@@ -1,6 +1,6 @@
 <template>
   <div class="b-avatar" :class="[`b-avatar--${size}`]" :style="avatarStyle">
-    <img v-if="src && !imgError" :src="src" :alt="alt" @error="handleError" />
+    <img v-if="src && !imgError" :src="processedSrc" :alt="alt" @error="handleError" />
     <span v-else class="b-avatar__placeholder">
       {{ placeholderText }}
     </span>
@@ -9,6 +9,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { getAvatarUrl } from '@/utils/image'
 
 const props = withDefaults(defineProps<{
   src?: string
@@ -46,6 +47,10 @@ const avatarStyle = computed(() => ({
 
 const placeholderText = computed(() => {
   return props.alt?.charAt(0)?.toUpperCase() || '?'
+})
+
+const processedSrc = computed(() => {
+  return getAvatarUrl(props.src || '')
 })
 
 function handleError() {

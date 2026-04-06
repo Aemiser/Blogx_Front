@@ -8,7 +8,7 @@
         class="author-item"
         @click="goProfile(author.userID)"
       >
-        <BAvatar :src="author.userAvatar" :size="40" :alt="author.userNickname" />
+        <BAvatar :src="getAvatarUrl(author.userAvatar)" :size="40" :alt="author.userNickname" />
         <div class="author-item__info">
           <div class="author-item__name">{{ author.userNickname }}</div>
           <div class="author-item__bio">{{ author.userAbstract || '这个人很懒，什么都没写' }}</div>
@@ -23,6 +23,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { RecommendAuthor } from '@/types'
 import { getRecommendAuthors } from '@/api/modules/user'
+import { getAvatarUrl } from '@/utils/image'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 
 const router = useRouter()

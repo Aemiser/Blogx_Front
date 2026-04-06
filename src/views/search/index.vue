@@ -56,7 +56,7 @@
               class="search-result-item"
               @click="goUser(user.userID)"
             >
-              <img :src="user.avatar" class="user-avatar" />
+              <img :src="getAvatarUrl(user.avatar)" class="user-avatar" />
               <div class="user-info">
                 <h3 class="user-name">{{ user.nickname }}</h3>
                 <p class="user-abstract" v-if="user.abstract">{{ user.abstract }}</p>
@@ -95,6 +95,7 @@ import { useRoute, useRouter } from 'vue-router'
 import type { FullTextSearchResult, UserSearchResult } from '@/types'
 import { fullTextSearch, searchUser, getTagAggregation } from '@/api/modules/search'
 import { formatNumber } from '@/utils'
+import { getAvatarUrl } from '@/utils/image'
 import BButton from '@/components/base/BButton/index.vue'
 
 const route = useRoute()

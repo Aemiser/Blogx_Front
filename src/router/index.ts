@@ -174,6 +174,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '文章审核', requiresAuth: true, requiresAdmin: true, hideHeader: true, hideFooter: true }
       },
       {
+        path: 'banner',
+        name: 'AdminBanner',
+        component: () => import('@/views/admin/banner/index.vue'),
+        meta: { title: 'Banner 管理', requiresAuth: true, requiresAdmin: true, hideHeader: true, hideFooter: true }
+      },
+      {
         path: 'site',
         name: 'AdminSite',
         component: () => import('@/views/admin/site/index.vue'),

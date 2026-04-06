@@ -15,7 +15,7 @@
           :class="{ 'dm-session--active': activeSession?.userID === session.userID }"
           @click="openSession(session)"
         >
-          <BAvatar :src="session.userAvatar" :size="40" :alt="session.userNickname" />
+          <BAvatar :src="getAvatarUrl(session.userAvatar)" :size="40" :alt="session.userNickname" />
           <div class="dm-session__info">
             <div class="dm-session__name">{{ session.userNickname }}</div>
             <div class="dm-session__last">{{ getLastMessage(session) }}</div>
@@ -39,7 +39,7 @@
           </svg>
         </button>
         <BAvatar 
-          :src="activeSession.userAvatar" 
+          :src="getAvatarUrl(activeSession.userAvatar)" 
           :size="32" 
           :alt="activeSession.userNickname" 
           class="dm-chat__avatar"
@@ -68,7 +68,7 @@
           <div class="dm-msg" :class="{ 'dm-msg--self': isCurrentUser(msg) }">
             <BAvatar
               v-if="isCurrentUser(msg)"
-              :src="userStore.userInfo?.avatar"
+              :src="getAvatarUrl(userStore.userInfo?.avatar)"
               :size="32"
               :alt="userStore.userInfo?.nickname"
               class="dm-msg__avatar"
@@ -76,7 +76,7 @@
             />
             <BAvatar
               v-else
-              :src="activeSession.userAvatar"
+              :src="getAvatarUrl(activeSession.userAvatar)"
               :size="32"
               :alt="activeSession.userNickname"
               class="dm-msg__avatar"
@@ -85,7 +85,7 @@
             <div class="dm-msg__content">
               <div class="dm-msg__bubble">
                 <template v-if="msg.msgType === 1">{{ msg.msg?.contentMsg?.Content }}</template>
-                <img v-else-if="msg.msgType === 2" :src="msg.msg?.imagetMsg?.Src" class="dm-msg__image" @click="previewImage(msg.msg?.imagetMsg?.Src)" />
+                <img v-else-if="msg.msgType === 2" :src="getFullImageUrl(msg.msg?.imagetMsg?.Src)" class="dm-msg__image" @click="previewImage(getFullImageUrl(msg.msg?.imagetMsg?.Src))" />
                 <div v-else-if="msg.msgType === 3" class="dm-msg__md" v-html="renderMarkdown(msg.msg?.markdownMsg?.content)"></div>
               </div>
             </div>
@@ -198,6 +198,7 @@ import type { ChatSession } from '@/types'
 import { getChatSessionList, getChatRecord, markMessageAsRead } from '@/api/modules/message'
 import { uploadImage } from '@/api/modules/banner'
 import { formatRelativeTime, chatWS } from '@/utils'
+import { getAvatarUrl, getFullImageUrl } from '@/utils/image'
 import { useUserStore } from '@/stores/user'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 

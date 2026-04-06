@@ -8,7 +8,7 @@
       <div v-else class="user-list">
         <div v-for="user in fansList" :key="user.fansUserID" class="user-item">
           <div class="user-avatar" @click="$router.push(`/user/${user.fansUserID}`)">
-            <BAvatar :src="user.fansUserAvatar" :size="48" :alt="user.fansUserNickname" />
+            <BAvatar :src="getAvatarUrl(user.fansUserAvatar)" :size="48" :alt="user.fansUserNickname" />
           </div>
           <div class="user-info" @click="$router.push(`/user/${user.fansUserID}`)">
             <h4 class="user-name">{{ user.fansUserNickname }}</h4>
@@ -25,6 +25,7 @@
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { getFansList, followUser } from '@/api/modules/user'
+import { getAvatarUrl } from '@/utils/image'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 import BButton from '@/components/base/BButton/index.vue'
 

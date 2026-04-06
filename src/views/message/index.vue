@@ -35,7 +35,7 @@
               @click="handleGlobalRead(msg)"
             >
               <div class="gm__icon" v-if="msg.icon">
-                <img :src="msg.icon" :alt="msg.title" />
+                <img :src="getFullImageUrl(msg.icon)" :alt="msg.title" />
               </div>
               <div class="gm__content">
                 <div class="gm__title">{{ msg.title }}</div>
@@ -69,7 +69,7 @@
               @click="handleRead(msg)"
             >
               <div class="ii__left">
-                <BAvatar :src="msg.actionuser_avatar" :size="40" :alt="msg.actionuser_nickname" />
+                <BAvatar :src="getAvatarUrl(msg.actionuser_avatar)" :size="40" :alt="msg.actionuser_nickname" />
               </div>
               <div class="ii__right">
                 <div class="ii__title">
@@ -120,6 +120,7 @@ import { useRoute } from 'vue-router'
 import type { SiteMessage, GlobalNotification } from '@/types'
 import { getSiteMsgList, readSiteMsg, deleteSiteMsg, getUnreadCount, getGlobalNotificationList, userGlobalNotification } from '@/api/modules/message'
 import { formatRelativeTime } from '@/utils'
+import { getFullImageUrl, getAvatarUrl } from '@/utils/image'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 import PrivateMessage from './components/PrivateMessage.vue'
 

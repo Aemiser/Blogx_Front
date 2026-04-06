@@ -13,6 +13,7 @@ import { ref, computed, onMounted, watch, nextTick, h, createApp } from 'vue'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
 import CodeBlock from './CodeBlock.vue'
+import { getFullImageUrl } from '@/utils/image'
 
 const props = defineProps<{
   content: string
@@ -42,12 +43,28 @@ marked.setOptions({
   gfm: true,
 })
 
+// 生成完整图片 URL 的辅助函数
+const processImageUrl = (src: string): string => {
+  return getFullImageUrl(src)
+}
+
 // 渲染 Markdown 为 HTML
 const renderedContent = computed(() => {
   if (!props.content) return ''
   
   // 自定义渲染器
   const renderer = new marked.Renderer()
+  
+  // 自定义图片渲染 - 转换相对路径为完整 URL
+  renderer.image = function(href: any, title: any, text: any) {
+    const hrefStr = typeof href === 'object' ? href.href : href
+    const titleStr = typeof title === 'object' ? title.title : title
+    const textStr = typeof text === 'object' ? text.text : text
+    
+    const fullUrl = processImageUrl(hrefStr)
+    const titleAttr = titleStr ? ` title="${titleStr}"` : ''
+    return `<img src="${fullUrl}" alt="${textStr}"${titleAttr} loading="lazy" />`
+  }
   
   // 自定义代码块渲染 - 我们将在挂载后替换为 Vue 组件
   renderer.code = function(code: any, language: any) {

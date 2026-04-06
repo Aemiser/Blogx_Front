@@ -46,7 +46,7 @@
               <td>{{ article.id }}</td>
               <td>
                 <div class="article-cover" @click="article.cover && previewImage(article.cover)">
-                  <img v-if="article.cover" :src="article.cover" alt="cover" />
+                  <img v-if="article.cover" :src="getFullImageUrl(article.cover)" alt="cover" />
                   <span v-else class="cover-placeholder">无</span>
                 </div>
               </td>
@@ -55,9 +55,9 @@
                 <div class="author-cell">
                   <img 
                     v-if="article.userAvatar" 
-                    :src="article.userAvatar" 
+                    :src="getFullImageUrl(article.userAvatar)" 
                     class="author-avatar" 
-                    @click.stop="previewImage(article.userAvatar)"
+                    @click.stop="previewImage(getFullImageUrl(article.userAvatar))"
                   />
                   <span class="author-name" @click="showAuthorInfo(article)">{{ article.nickName }}</span>
                 </div>
@@ -117,8 +117,8 @@
           <button class="close-btn" @click="showAuthorModal = false">×</button>
         </div>
         <div class="modal-body">
-          <div class="detail-avatar" @click="authorInfo?.avatar && previewImage(authorInfo.avatar)">
-            <img v-if="authorInfo?.avatar" :src="authorInfo.avatar" alt="avatar" />
+          <div class="detail-avatar" @click="authorInfo?.avatar && previewImage(getFullImageUrl(authorInfo.avatar))">
+            <img v-if="authorInfo?.avatar" :src="getFullImageUrl(authorInfo.avatar)" alt="avatar" />
             <span v-else class="avatar-placeholder">{{ authorInfo?.nickName?.[0]?.toUpperCase() }}</span>
           </div>
           <div class="detail-info">
@@ -201,6 +201,7 @@ import { useRouter } from 'vue-router'
 import type { Article } from '@/types'
 import { getArticleList, adminDeleteArticle, examineArticle } from '@/api/modules/article'
 import { getUserBase } from '@/api/modules/user'
+import { getFullImageUrl } from '@/utils/image'
 
 const router = useRouter()
 const articles = ref<Article[]>([])

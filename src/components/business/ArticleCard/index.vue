@@ -2,7 +2,7 @@
   <article class="article-card" @click="goDetail">
     <!-- 左侧封面图 -->
     <div class="article-card__cover" v-if="article.cover">
-      <img :src="article.cover" :alt="article.title" loading="lazy" />
+      <img :src="getFullImageUrl(article.cover)" :alt="article.title" loading="lazy" />
     </div>
     <!-- 默认封面 -->
     <div class="article-card__cover article-card__cover--default" v-else>
@@ -46,6 +46,7 @@
 import { useRouter } from 'vue-router'
 import type { Article } from '@/types'
 import { formatNumber, formatRelativeTime } from '@/utils'
+import { getFullImageUrl } from '@/utils/image'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 
 const props = defineProps<{

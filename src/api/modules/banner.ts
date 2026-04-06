@@ -44,11 +44,11 @@ export function updateBanner(id: number, data: UpdateBannerParams) {
 /**
  * 删除 Banner
  */
-export function deleteBanner(data: CreateBannerParams) {
+export function deleteBanner(IDList: number[]) {
   return request<any>({
     url: '/api/banner',
     method: 'DELETE',
-    data
+    data: { IDList }
   })
 }
 

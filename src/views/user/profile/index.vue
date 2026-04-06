@@ -3,7 +3,7 @@
     <div class="app-container">
       <div class="profile-header card" v-if="userInfo">
         <div class="profile-left">
-          <BAvatar :src="userInfo.avatar" :size="80" :alt="userInfo.nickname" />
+          <BAvatar :src="getAvatarUrl(userInfo.avatar)" :size="80" :alt="userInfo.nickname" />
           <div class="profile-info">
             <h1 class="profile-name">{{ userInfo.nickname }}</h1>
             <p class="profile-bio">{{ userInfo.place || '这个人很懒，什么都没写' }}</p>
@@ -207,7 +207,7 @@
                       @click="$router.push(`/article/${article.id}`)"
                     >
                       <div class="article-cover" v-if="article.cover">
-                        <img :src="article.cover" :alt="article.title" />
+                        <img :src="getFullImageUrl(article.cover)" :alt="article.title" />
                       </div>
                       <div class="article-content">
                         <h4 class="article-title">{{ article.title }}</h4>
@@ -282,7 +282,7 @@
                 @click="goToUserProfile(user.focusUserID)"
               >
                 <div class="user-avatar">
-                  <BAvatar :src="user.focusUserAvatar" :size="48" :alt="user.focusUserNickname" />
+                  <BAvatar :src="getAvatarUrl(user.focusUserAvatar)" :size="48" :alt="user.focusUserNickname" />
                 </div>
                 <div class="user-info">
                   <h4 class="user-name">{{ user.focusUserNickname }}</h4>
@@ -332,7 +332,7 @@
                 @click="goToUserProfile(user.fansUserID)"
               >
                 <div class="user-avatar">
-                  <BAvatar :src="user.fansUserAvatar" :size="48" :alt="user.fansUserNickname" />
+                  <BAvatar :src="getAvatarUrl(user.fansUserAvatar)" :size="48" :alt="user.fansUserNickname" />
                 </div>
                 <div class="user-info">
                   <h4 class="user-name">{{ user.fansUserNickname }}</h4>
@@ -368,6 +368,7 @@ import { getUserBase, getFollowingList, getFansList, followUser, unfollowUser } 
 import { getArticleList, getCollectionList } from '@/api/modules/article'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 import ArticleCard from '@/components/business/ArticleCard/index.vue'
+import { getFullImageUrl, getAvatarUrl } from '@/utils/image'
 
 const route = useRoute()
 const router = useRouter()

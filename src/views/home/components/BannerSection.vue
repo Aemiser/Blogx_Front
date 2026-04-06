@@ -46,6 +46,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import type { Banner } from '@/types'
 import { getBannerList } from '@/api/modules/banner'
+import { getCoverUrl } from '@/utils/image'
 
 const banners = ref<Banner[]>([])
 const currentIndex = ref(0)
@@ -73,19 +74,6 @@ function handleClick(banner: Banner) {
   if (banner.href) {
     window.open(banner.href, '_blank')
   }
-}
-
-function getCoverUrl(cover: string) {
-  // 如果 cover 为空，返回默认占位图
-  if (!cover) {
-    return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1200" height="280" viewBox="0 0 1200 280"%3E%3Crect fill="%23f4f5f7" width="1200" height="280"/%3E%3Ctext fill="%239499a0" font-family="sans-serif" font-size="24" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EBlogx%3C/text%3E%3C/svg%3E'
-  }
-  // 如果是完整 URL 直接返回
-  if (cover.startsWith('http://') || cover.startsWith('https://')) {
-    return cover
-  }
-  // 否则拼接基础 URL
-  return `${import.meta.env.VITE_API_BASE_URL}${cover}`
 }
 
 function prev() {

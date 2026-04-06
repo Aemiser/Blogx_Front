@@ -25,6 +25,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { formatNumber } from '@/utils'
+import { getAvatarUrl } from '@/utils/image'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 
 const props = defineProps<{
@@ -47,7 +48,8 @@ const displayName = computed(() => {
 })
 
 const avatarUrl = computed(() => {
-  return props.author.userAvatar || props.author.useravatar || ''
+  const avatar = props.author.userAvatar || props.author.useravatar || ''
+  return getAvatarUrl(avatar)
 })
 
 function goProfile() {

@@ -44,8 +44,8 @@
             <tr v-for="user in users" :key="user.id">
               <td>{{ user.id }}</td>
               <td>
-                <div class="user-avatar" @click="user.avatar && previewAvatar(user.avatar)">
-                  <img v-if="user.avatar" :src="user.avatar" alt="avatar" />
+                <div class="user-avatar" @click="user.avatar && previewAvatar(getAvatarUrl(user.avatar))">
+                  <img v-if="user.avatar" :src="getAvatarUrl(user.avatar)" alt="avatar" />
                   <span v-else class="avatar-placeholder">{{ user.nickname?.[0]?.toUpperCase() }}</span>
                 </div>
               </td>
@@ -65,7 +65,6 @@
                 <div class="action-buttons">
                   <button class="action-btn" @click="viewUser(user)">查看</button>
                   <button class="action-btn" @click="editUser(user)">编辑</button>
-                  <button class="action-btn danger" @click="deleteUser(user.id)">删除</button>
                 </div>
               </td>
             </tr>
@@ -94,6 +93,13 @@
         </div>
       </div>
     </div>
+    
+    <div v-if="showAvatarPreview" class="modal-overlay" @click="showAvatarPreview = false">
+      <div class="avatar-preview-modal" @click.stop>
+        <img :src="previewAvatarUrl" alt="avatar" />
+        <button class="close-btn" @click="showAvatarPreview = false">×</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -101,6 +107,7 @@
 import { ref, computed, onMounted } from 'vue'
 import type { UserListItem } from '@/types'
 import { getUserList, updateUserRole } from '@/api/modules/user'
+import { getAvatarUrl } from '@/utils/image'
 
 const users = ref<UserListItem[]>([])
 const searchKeyword = ref('')
@@ -680,5 +687,40 @@ onMounted(() => {
   font-size: 32px;
   color: #fff;
   cursor: pointer;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.avatar-preview-modal {
+  position: relative;
+  z-index: 101;
+  
+  img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 12px;
+  }
+  
+  .close-btn {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: none;
+    border: none;
+    font-size: 32px;
+    color: #fff;
+    cursor: pointer;
+  }
 }
 </style>

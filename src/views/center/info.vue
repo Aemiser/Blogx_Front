@@ -2,7 +2,7 @@
   <div class="info-page">
     <div class="card user-card" v-if="userInfo">
       <div class="user-header">
-        <BAvatar :src="userInfo.avatar" :size="80" :alt="userInfo.nickname" />
+        <BAvatar :src="getAvatarUrl(userInfo.avatar)" :size="80" :alt="userInfo.nickname" />
         <h2 class="user-name">{{ userInfo.nickname }}</h2>
         <p class="user-bio">{{ userInfo.abstract || '这个人很懒，什么都没写' }}</p>
       </div>
@@ -58,6 +58,7 @@
 import { ref, onMounted } from 'vue'
 import { getUserBase } from '@/api/modules/user'
 import { useUserStore } from '@/stores/user'
+import { getAvatarUrl } from '@/utils/image'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 
 const userStore = useUserStore()

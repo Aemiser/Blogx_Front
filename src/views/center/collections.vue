@@ -55,7 +55,7 @@
               @click="!article.noPublish && $router.push(`/article/${article.id}`)"
             >
               <div class="article-cover" v-if="article.cover">
-                <img :src="article.cover" :alt="article.title" />
+                <img :src="getFullImageUrl(article.cover)" :alt="article.title" />
               </div>
               <div class="article-content">
                 <h4 class="article-title">{{ article.title }}</h4>
@@ -135,6 +135,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted } from 'vue'
 import { getCollectionList, getArticleList, saveCollection, deleteCollection as deleteCollectionApi } from '@/api/modules/article'
+import { getFullImageUrl } from '@/utils/image'
 
 const collections = ref<any[]>([])
 const selectedCollectionId = ref<number | null>(null)

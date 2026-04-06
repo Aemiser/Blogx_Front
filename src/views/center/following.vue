@@ -8,7 +8,7 @@
       <div v-else class="user-list">
         <div v-for="user in followingList" :key="user.focusUserID" class="user-item">
           <div class="user-avatar" @click="$router.push(`/user/${user.focusUserID}`)">
-            <BAvatar :src="user.focusUserAvatar" :size="48" :alt="user.focusUserNickname" />
+            <BAvatar :src="getAvatarUrl(user.focusUserAvatar)" :size="48" :alt="user.focusUserNickname" />
           </div>
           <div class="user-info" @click="$router.push(`/user/${user.focusUserID}`)">
             <h4 class="user-name">{{ user.focusUserNickname }}</h4>
@@ -25,6 +25,7 @@
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { getFollowingList, unfollowUser } from '@/api/modules/user'
+import { getAvatarUrl } from '@/utils/image'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 import BButton from '@/components/base/BButton/index.vue'
 

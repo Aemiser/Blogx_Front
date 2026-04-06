@@ -25,7 +25,7 @@
               @click="$router.push(`/article/${item.articleID}`)"
             >
               <div class="history-cover" v-if="item.cover">
-                <img :src="item.cover" alt="封面" />
+                <img :src="getFullImageUrl(item.cover)" alt="封面" />
               </div>
               <div class="history-content">
                 <h3 class="history-title">{{ item.title || '暂无标题' }}</h3>
@@ -55,6 +55,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { getHistory } from '@/api/modules/article'
+import { getFullImageUrl } from '@/utils/image'
 import BButton from '@/components/base/BButton/index.vue'
 
 interface HistoryItem {
