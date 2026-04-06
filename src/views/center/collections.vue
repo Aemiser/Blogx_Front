@@ -51,16 +51,53 @@
               v-for="article in articles" 
               :key="article.id" 
               class="article-item"
-              @click="$router.push(`/article/${article.id}`)"
+              :class="{ 'article-item--unpublished': article.noPublish }"
+              @click="!article.noPublish && $router.push(`/article/${article.id}`)"
             >
+              <div class="article-cover" v-if="article.cover">
+                <img :src="article.cover" :alt="article.title" />
+              </div>
               <div class="article-content">
                 <h4 class="article-title">{{ article.title }}</h4>
-                <p class="article-abstract">{{ article.abstract || '暂无摘要' }}</p>
+                <p v-if="!article.noPublish" class="article-abstract">{{ article.abstract || '暂无摘要' }}</p>
                 <div class="article-meta">
                   <span class="meta-author">{{ article.nickName }}</span>
                   <span class="meta-item">{{ formatDate(article.createdAt) }}</span>
-                  <span class="meta-item">{{ article.lookCount }} 阅读</span>
-                  <span class="meta-item">{{ article.diggCount }} 点赞</span>
+                  <span v-if="!article.noPublish" class="meta-stats">
+                    <span class="stat-item">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                      {{ article.lookCount }}
+                    </span>
+                    <span class="stat-item">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                      </svg>
+                      {{ article.diggCount }}
+                    </span>
+                    <span class="stat-item">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                      </svg>
+                      {{ article.commentCount }}
+                    </span>
+                    <span class="stat-item">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                      </svg>
+                      {{ article.collectCount }}
+                    </span>
+                  </span>
+                </div>
+                <div v-if="article.noPublish" class="unpublished-tag">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  <span>未发布</span>
                 </div>
               </div>
             </div>
@@ -410,10 +447,30 @@ onMounted(() => {
   cursor: pointer;
   transition: all $duration-fast;
   border: 1px solid transparent;
+  display: flex;
+  gap: $space-4;
 
   &:hover {
     background: #e8e9eb;
     border-color: #e3e5e7;
+  }
+
+  &--unpublished {
+    opacity: 0.7;
+  }
+}
+
+.article-cover {
+  width: 120px;
+  height: 80px;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 }
 
@@ -445,7 +502,38 @@ onMounted(() => {
 .article-meta {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: $space-3;
+}
+
+.meta-stats {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+}
+
+.stat-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: $text-xs;
+  color: $text-tertiary;
+
+  svg {
+    opacity: 0.7;
+  }
+}
+
+.unpublished-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: $space-2;
+  padding: 2px 8px;
+  background: rgba($warning, 0.1);
+  color: $warning;
+  border-radius: $radius-sm;
+  font-size: $text-xs;
 }
 
 .meta-author {
