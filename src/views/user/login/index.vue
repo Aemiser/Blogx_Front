@@ -73,6 +73,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { getCaptcha } from '@/api/modules/captcha'
+import { toast } from '@/composables/useToast'
 import BButton from '@/components/base/BButton/index.vue'
 
 const router = useRouter()
@@ -121,7 +122,7 @@ async function handleLogin() {
     router.push(redirect || '/')
   } catch (error: any) {
     console.error('Login failed:', error)
-    alert(error.message || '登录失败')
+    toast.error(error.message || '登录失败')
     fetchCaptcha()
   } finally {
     loading.value = false

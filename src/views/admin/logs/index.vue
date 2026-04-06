@@ -8,9 +8,11 @@
       <div class="header-right">
         <select v-model="logTypeFilter" class="filter-select" @change="handleFilterChange">
           <option value="">全部类型</option>
-          <option value="1">系统日志</option>
+          <option value="1">登录日志</option>
           <option value="2">操作日志</option>
-          <option value="3">登录日志</option>
+          <option value="3">运行日志</option>
+          <option value="4">管理员操作</option>
+          <option value="5">查询日志</option>
         </select>
         <input 
           v-model="searchKeyword" 
@@ -134,6 +136,10 @@
         </div>
       </div>
     </div>
+    
+    <div v-if="toast.show" class="toast" :class="toast.type">
+      <span>{{ toast.message }}</span>
+    </div>
   </div>
 </template>
 
@@ -151,6 +157,18 @@ const currentLog = ref<LogInfo | null>(null)
 const page = ref(1)
 const limit = ref(10)
 const total = ref(0)
+const toast = ref({
+  show: false,
+  message: '',
+  type: 'success'
+})
+
+function showToast(message: string, type: 'success' | 'error' = 'success') {
+  toast.value = { show: true, message, type }
+  setTimeout(() => {
+    toast.value.show = false
+  }, 3000)
+}
 
 const totalPages = computed(() => Math.ceil(total.value / limit.value))
 
@@ -191,18 +209,22 @@ function goToPage(p: number) {
 
 function getTypeName(type: number | undefined) {
   const map: Record<number, string> = {
-    1: '系统',
+    1: '登录',
     2: '操作',
-    3: '登录'
+    3: '运行',
+    4: '管理员操作',
+    5: '查询'
   }
   return map[type || 0] || '未知'
 }
 
 function getTypeClass(type: number | undefined) {
   const map: Record<number, string> = {
-    1: 'tag--info',
+    1: 'tag--success',
     2: 'tag--warning',
-    3: 'tag--success'
+    3: 'tag--info',
+    4: 'tag--danger',
+    5: 'tag--default'
   }
   return map[type || 0] || ''
 }
@@ -275,7 +297,7 @@ async function deleteLog(id: number) {
   try {
     await deleteLogs([id])
     logs.value = logs.value.filter(l => l.id !== id)
-    alert('删除成功')
+    showToast('删除成功')
   } catch (error) {
     console.error('Delete failed:', error)
   }
@@ -288,7 +310,7 @@ async function deleteSelectedLogs() {
     await deleteLogs(selectedLogs.value)
     logs.value = logs.value.filter(l => !selectedLogs.value.includes(l.id))
     selectedLogs.value = []
-    alert('删除成功')
+    showToast('删除成功')
   } catch (error) {
     console.error('Delete failed:', error)
   }
@@ -422,6 +444,16 @@ onMounted(() => {
   &--success {
     background: rgba(16, 185, 129, 0.1);
     color: #10b981;
+  }
+  
+  &--danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+  
+  &--default {
+    background: #f1f5f9;
+    color: #64748b;
   }
 }
 
@@ -701,6 +733,40 @@ onMounted(() => {
   
   &:hover {
     background: #e2e8f0;
+  }
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: toastIn 0.3s ease;
+  
+  &.success {
+    background: #10b981;
+    color: #fff;
+  }
+  
+  &.error {
+    background: #ef4444;
+    color: #fff;
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 }
 </style>

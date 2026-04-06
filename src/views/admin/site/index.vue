@@ -425,6 +425,7 @@ import {
   updateImageConfig
 } from '@/api/modules/site'
 import Switch from '@/components/base/Switch/index.vue'
+import { toast } from '@/composables/useToast'
 
 const tabs = [
   { label: '站点', value: 'site' },
@@ -519,7 +520,7 @@ async function fetchSiteInfo() {
 async function saveSiteInfo() {
   try {
     await updateSiteInfo(siteForm.value)
-    alert('保存成功')
+    toast.success('保存成功')
   } catch (error) {
     console.error('Save failed:', error)
   }
@@ -537,7 +538,7 @@ async function fetchEmailConfig() {
 async function saveEmailConfig() {
   try {
     await updateEmailConfig(emailForm.value)
-    alert('保存成功')
+    toast.success('保存成功')
   } catch (error) {
     console.error('Save failed:', error)
   }
@@ -555,7 +556,7 @@ async function fetchQQConfig() {
 async function saveQQConfig() {
   try {
     await updateQQConfig(qqForm.value)
-    alert('保存成功')
+    toast.success('保存成功')
   } catch (error) {
     console.error('Save failed:', error)
   }
@@ -573,7 +574,7 @@ async function fetchQiniuConfig() {
 async function saveQiniuConfig() {
   try {
     await updateQiniuConfig(qiniuForm.value)
-    alert('保存成功')
+    toast.success('保存成功')
   } catch (error) {
     console.error('Save failed:', error)
   }
@@ -591,7 +592,7 @@ async function fetchAIConfig() {
 async function saveAIConfig() {
   try {
     await updateAIConfig(aiForm.value)
-    alert('保存成功')
+    toast.success('保存成功')
   } catch (error) {
     console.error('Save failed:', error)
   }
@@ -629,7 +630,7 @@ async function fetchImageConfig() {
 async function saveImageConfig() {
   try {
     await updateImageConfig(imageForm.value)
-    alert('保存成功')
+    toast.success('保存成功')
   } catch (error) {
     console.error('Save failed:', error)
   }

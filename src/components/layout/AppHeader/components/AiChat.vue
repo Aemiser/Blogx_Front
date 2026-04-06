@@ -96,6 +96,7 @@
 import { ref, nextTick, watch } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { storage } from '@/utils'
+import { toast } from '@/composables/useToast'
 
 const props = defineProps<{
   visible: boolean
@@ -237,9 +238,8 @@ async function sendMessage() {
                   // 其他API的token过期处理
                   storage.clear()
                   if (hasToken) {
-                    // 使用更友好的提示方式
                     setTimeout(() => {
-                      alert('登录已过期，请重新登录')
+                      toast.error('登录已过期，请重新登录')
                       window.location.href = '/login'
                     }, 100)
                   }

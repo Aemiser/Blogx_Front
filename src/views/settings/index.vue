@@ -49,6 +49,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import BButton from '@/components/base/BButton/index.vue'
+import { toast } from '@/composables/useToast'
 
 const userStore = useUserStore()
 const saving = ref(false)
@@ -62,7 +63,7 @@ async function handleSave() {
   saving.value = true
   try {
     await userStore.updateUserInfo(form)
-    alert('保存成功')
+    toast.success('保存成功')
   } catch (error) {
     console.error('Save failed:', error)
   } finally {

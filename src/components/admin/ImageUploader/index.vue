@@ -69,6 +69,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { uploadImage } from '@/api/modules/banner'
+import { toast } from '@/composables/useToast'
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const isDragover = ref(false)
@@ -102,7 +103,7 @@ function handleFileChange(e: Event) {
 
 async function uploadFile(file: File) {
   if (!file.type.startsWith('image/')) {
-    alert('请选择图片文件')
+    toast.warning('请选择图片文件')
     return
   }
   
@@ -122,7 +123,7 @@ async function uploadFile(file: File) {
     clearInterval(progressInterval)
   } catch (error) {
     console.error('Upload failed:', error)
-    alert('上传失败')
+    toast.error('上传失败')
     clearInterval(progressInterval)
   } finally {
     setTimeout(() => {
@@ -133,9 +134,9 @@ async function uploadFile(file: File) {
 
 function copyUrl(url: string) {
   navigator.clipboard.writeText(url).then(() => {
-    alert('复制成功')
+    toast.success('复制成功')
   }).catch(() => {
-    alert('复制失败')
+    toast.error('复制失败')
   })
 }
 </script>

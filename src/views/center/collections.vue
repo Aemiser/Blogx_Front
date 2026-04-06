@@ -136,6 +136,7 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import { getCollectionList, getArticleList, saveCollection, deleteCollection as deleteCollectionApi } from '@/api/modules/article'
 import { getFullImageUrl } from '@/utils/image'
+import { toast } from '@/composables/useToast'
 
 const collections = ref<any[]>([])
 const selectedCollectionId = ref<number | null>(null)
@@ -222,7 +223,7 @@ async function handleCreateCollection() {
     await fetchCollections()
   } catch (error) {
     console.error('Failed to create collection:', error)
-    alert('创建失败')
+    toast.error('创建失败')
   }
 }
 
@@ -238,7 +239,7 @@ async function deleteCollection(id: number) {
     await fetchCollections()
   } catch (error) {
     console.error('Failed to delete collection:', error)
-    alert('删除失败')
+    toast.error('删除失败')
   }
 }
 

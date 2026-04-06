@@ -178,6 +178,7 @@ import { uploadImage } from '@/api/modules/banner'
 import { getFullImageUrl, getAvatarUrl } from '@/utils/image'
 import BButton from '@/components/base/BButton/index.vue'
 import BAvatar from '@/components/base/BAvatar/index.vue'
+import { toast } from '@/composables/useToast'
 
 const userInfo = ref<any>(null)
 const savingProfile = ref(false)
@@ -226,12 +227,12 @@ async function handleFileChange(event: Event) {
 
   const validTypes = ['image/jpeg', 'image/png', 'image/gif']
   if (!validTypes.includes(file.type)) {
-    alert('请上传 jpg、png、gif 格式的图片')
+    toast.warning('请上传 jpg、png、gif 格式的图片')
     return
   }
 
   if (file.size > 5 * 1024 * 1024) {
-    alert('图片大小不能超过 5MB')
+    toast.warning('图片大小不能超过 5MB')
     return
   }
 
@@ -243,7 +244,7 @@ async function handleFileChange(event: Event) {
     avatarUrl.value = getFullImageUrl(uploadedPath)
   } catch (error) {
     console.error('Upload failed:', error)
-    alert('图片上传失败')
+    toast.error('图片上传失败')
     avatarUrl.value = ''
   } finally {
     uploading.value = false
@@ -281,7 +282,7 @@ async function handleSaveProfile() {
     
     await updateUser(data)
     avatarUrl.value = ''
-    alert('保存成功')
+    toast.success('保存成功')
     fetchUserInfo()
   } catch (error) {
     console.error('Save failed:', error)
@@ -300,13 +301,13 @@ async function updatePrivacy() {
 
 async function sendEmailCode() {
   if (!emailForm.email) {
-    alert('请输入邮箱地址')
+    toast.warning('请输入邮箱地址')
     return
   }
   
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(emailForm.email)) {
-    alert('请输入有效的邮箱地址')
+    toast.warning('请输入有效的邮箱地址')
     return
   }
   
@@ -325,20 +326,20 @@ async function sendEmailCode() {
         clearInterval(countdownTimer)
       }
     }, 1000)
-    alert('验证码已发送到您的邮箱')
+    toast.success('验证码已发送到您的邮箱')
   } catch (error: any) {
     console.error('Send email failed:', error)
-    alert(error.response?.data?.msg || '发送失败')
+    toast.error(error.response?.data?.msg || '发送失败')
   }
 }
 
 async function handleBindEmail() {
   if (!emailForm.email) {
-    alert('请输入邮箱地址')
+    toast.warning('请输入邮箱地址')
     return
   }
   if (!emailForm.code) {
-    alert('请输入验证码')
+    toast.warning('请输入验证码')
     return
   }
   
@@ -348,14 +349,14 @@ async function handleBindEmail() {
       emailID: emailForm.emailID,
       emailCode: emailForm.code
     })
-    alert('绑定成功')
+    toast.success('绑定成功')
     showBindEmailDialog.value = false
     emailForm.email = ''
     emailForm.code = ''
     fetchUserInfo()
   } catch (error: any) {
     console.error('Bind email failed:', error)
-    alert(error.response?.data?.msg || '绑定失败')
+    toast.error(error.response?.data?.msg || '绑定失败')
   } finally {
     bindingEmail.value = false
   }

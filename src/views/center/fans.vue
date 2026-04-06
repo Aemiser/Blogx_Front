@@ -28,6 +28,7 @@ import { getFansList, followUser } from '@/api/modules/user'
 import { getAvatarUrl } from '@/utils/image'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 import BButton from '@/components/base/BButton/index.vue'
+import { toast } from '@/composables/useToast'
 
 const userStore = useUserStore()
 const fansList = ref<any[]>([])
@@ -46,7 +47,7 @@ async function fetchFansList() {
 async function follow(userId: number) {
   try {
     await followUser(userId)
-    alert('关注成功')
+    toast.success('关注成功')
   } catch (error) {
     console.error('Failed to follow:', error)
   }

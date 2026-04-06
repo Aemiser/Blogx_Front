@@ -95,6 +95,7 @@ import CommentItem from '@/components/comment/CommentItem.vue'
 import ArticleAuthor from './ArticleAuthor.vue'
 import TableOfContents from './TableOfContents.vue'
 import { useUserStore } from '@/stores/user'
+import { toast } from '@/composables/useToast'
 
 const route = useRoute()
 const router = useRouter()
@@ -257,7 +258,7 @@ async function handleCollect() {
         showCollectDialog.value = true
     } catch (error) {
         console.error('Failed to fetch collections:', error)
-        alert('获取收藏夹列表失败，请稍后重试')
+        toast.error('获取收藏夹列表失败，请稍后重试')
     }
 }
 
@@ -268,7 +269,7 @@ async function submitComment() {
   }
 
   if (!commentContent.value.trim()) {
-    alert('请输入评论内容')
+    toast.warning('请输入评论内容')
     return
   }
 

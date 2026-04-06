@@ -150,6 +150,7 @@ import { useRouter } from 'vue-router'
 import type { ArticleDetail, Collection } from '@/types'
 import { diggArticle, collectArticle, getCollectionList, saveCollection } from '@/api/modules/article'
 import { useUserStore } from '@/stores/user'
+import { toast } from '@/composables/useToast'
 
 interface TocItem {
   id: string
@@ -453,7 +454,7 @@ async function handleCancelCollect() {
     props.article.collectCount -= 1
   } catch (error) {
     console.error('Failed to cancel collect:', error)
-    alert('取消收藏失败')
+    toast.error('取消收藏失败')
   }
 }
 
@@ -490,7 +491,7 @@ async function confirmCreateCollection() {
     cancelCreateCollection()
   } catch (error) {
     console.error('Failed to create collection:', error)
-    alert('创建收藏夹失败')
+    toast.error('创建收藏夹失败')
   }
 }
 
@@ -513,14 +514,14 @@ async function confirmCollect() {
     closeCollectDialog()
   } catch (error) {
     console.error('Failed to collect:', error)
-    alert('收藏失败')
+    toast.error('收藏失败')
   }
 }
 
 function handleShare() {
   const url = window.location.href
   navigator.clipboard.writeText(url)
-  alert('链接已复制到剪贴板')
+  toast.success('链接已复制到剪贴板')
 }
 
 async function handleDigg() {

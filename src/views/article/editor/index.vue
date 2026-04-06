@@ -290,7 +290,7 @@ async function fetchCategories() {
 // AI 智能识别
 async function handleAiAnalysis() {
   if (!content.value.trim()) {
-    alert('请先输入文章内容')
+    toast.warning('请先输入文章内容')
     return
   }
   
@@ -325,7 +325,7 @@ async function handleAiAnalysis() {
     }
   } catch (error: any) {
     console.error('AI analysis failed:', error)
-    alert(error.message || '智能识别失败，请稍后重试')
+    toast.error(error.message || '智能识别失败，请稍后重试')
   } finally {
     analyzing.value = false
   }
@@ -334,7 +334,7 @@ async function handleAiAnalysis() {
 // AI 优化文章
 async function handleAiOptimize() {
   if (!content.value.trim()) {
-    alert('请先输入文章内容')
+    toast.warning('请先输入文章内容')
     return
   }
   
@@ -346,11 +346,11 @@ async function handleAiOptimize() {
       content.value = res.data
       canRevert.value = true
     } else {
-      alert(res.msg || 'AI优化失败')
+      toast.error(res.msg || 'AI优化失败')
     }
   } catch (error: any) {
     console.error('AI optimize failed:', error)
-    alert(error.message || 'AI优化失败，请稍后重试')
+    toast.error(error.message || 'AI优化失败，请稍后重试')
   } finally {
     aiOptimizing.value = false
   }
@@ -368,7 +368,7 @@ function handleRevert() {
 // 预览文章
 function previewArticle() {
   if (!content.value.trim()) {
-    alert('请先输入文章内容')
+    toast.warning('请先输入文章内容')
     return
   }
   // 将内容保存到 sessionStorage 并打开新窗口预览
@@ -483,7 +483,7 @@ function handleSave() {
 
 async function saveDraft() {
   if (!title.value.trim()) {
-    alert('请先输入文章标题')
+    toast.warning('请先输入文章标题')
     return
   }
   localStorage.setItem('article_draft', JSON.stringify({
@@ -494,17 +494,17 @@ async function saveDraft() {
     abstract: abstract.value,
     openComment: openComment.value
   }))
-  alert('草稿已保存')
+  toast.success('草稿已保存')
 }
 
 async function publishArticle() {
   if (!title.value.trim()) {
-    alert('请输入文章标题')
+    toast.warning('请输入文章标题')
     return
   }
   
   if (!content.value.trim()) {
-    alert('请输入文章内容')
+    toast.warning('请输入文章内容')
     return
   }
   
@@ -532,17 +532,17 @@ async function publishArticle() {
         ...articleData
       })
       localStorage.removeItem('article_draft')
-      alert('更新成功')
+      toast.success('更新成功')
       router.push(`/article/${articleId.value}`)
     } else {
       await createArticle(articleData)
       localStorage.removeItem('article_draft')
-      alert('发布成功')
+      toast.success('发布成功')
       router.push('/')
     }
   } catch (error: any) {
     console.error('Publish failed:', error)
-    alert(error.message || '发布失败')
+    toast.error(error.message || '发布失败')
   } finally {
     publishing.value = false
   }

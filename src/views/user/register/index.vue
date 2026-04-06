@@ -89,6 +89,7 @@ import { useUserStore } from '@/stores/user'
 import { sendEmail } from '@/api/modules/user'
 import { getCaptcha } from '@/api/modules/captcha'
 import { register } from '@/api/modules/user'
+import { toast } from '@/composables/useToast'
 import BButton from '@/components/base/BButton/index.vue'
 
 const router = useRouter()
@@ -108,7 +109,7 @@ const form = reactive({
 
 async function sendEmailCode() {
   if (!form.email) {
-    alert('请输入邮箱')
+    toast.warning('请输入邮箱')
     return
   }
   
@@ -137,13 +138,13 @@ async function sendEmailCode() {
     }, 1000)
   } catch (error: any) {
     console.error('Send email failed:', error)
-    alert(error.message || '发送验证码失败')
+    toast.error(error.message || '发送验证码失败')
   }
 }
 
 async function handleRegister() {
   if (form.pwd !== confirmPwd.value) {
-    alert('两次输入的密码不一致')
+    toast.warning('两次输入的密码不一致')
     return
   }
   
@@ -155,11 +156,11 @@ async function handleRegister() {
       pwd: form.pwd
     })
     
-    alert('注册成功，请登录')
+    toast.success('注册成功，请登录')
     router.push('/login')
   } catch (error: any) {
     console.error('Register failed:', error)
-    alert(error.message || '注册失败')
+    toast.error(error.message || '注册失败')
   } finally {
     loading.value = false
   }

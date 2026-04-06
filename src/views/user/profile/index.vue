@@ -369,6 +369,7 @@ import { getArticleList, getCollectionList } from '@/api/modules/article'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 import ArticleCard from '@/components/business/ArticleCard/index.vue'
 import { getFullImageUrl, getAvatarUrl } from '@/utils/image'
+import { toast } from '@/composables/useToast'
 
 const route = useRoute()
 const router = useRouter()
@@ -634,7 +635,7 @@ async function handleFollow() {
     await fetchUserInfo()
   } catch (err) {
     console.error('Failed to follow/unfollow:', err)
-    alert(relation.value === 2 || relation.value === 4 ? '取关失败' : '关注失败')
+    toast.error(relation.value === 2 || relation.value === 4 ? '取关失败' : '关注失败')
   } finally {
     followingLoading.value = false
   }

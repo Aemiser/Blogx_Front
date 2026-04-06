@@ -108,6 +108,7 @@ import { ref, computed, onMounted } from 'vue'
 import type { UserListItem } from '@/types'
 import { getUserList, updateUserRole } from '@/api/modules/user'
 import { getAvatarUrl } from '@/utils/image'
+import { toast } from '@/composables/useToast'
 
 const users = ref<UserListItem[]>([])
 const searchKeyword = ref('')
@@ -209,7 +210,7 @@ async function saveUser() {
       users.value[index].nickname = editForm.value.nickname
     }
     showEditModal.value = false
-    alert('保存成功')
+    toast.success('保存成功')
   } catch (error) {
     console.error('Save failed:', error)
   }
