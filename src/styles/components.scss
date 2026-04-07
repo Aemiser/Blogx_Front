@@ -5,10 +5,12 @@
   justify-content: center;
   gap: $space-2;
   font-weight: $font-weight-medium;
-  border-radius: $radius-md;
-  transition: all $duration-fast $ease-default;
+  border-radius: $radius-lg;
+  transition: all $duration-default cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   white-space: nowrap;
+  position: relative;
+  overflow: hidden;
   
   &:disabled {
     opacity: 0.5;
@@ -17,53 +19,66 @@
   
   // 尺寸
   &--sm {
-    height: 28px;
-    padding: 0 $space-3;
+    height: 32px;
+    padding: 0 $space-4;
     font-size: $text-sm;
   }
   
   &--md {
-    height: 36px;
-    padding: 0 $space-4;
+    height: 40px;
+    padding: 0 $space-5;
     font-size: $text-base;
   }
   
   &--lg {
-    height: 44px;
+    height: 48px;
     padding: 0 $space-6;
     font-size: $text-lg;
   }
   
   // 变体
   &--primary {
-    background: $primary;
+    background: linear-gradient(135deg, $primary 0%, darken($primary, 8%) 100%);
     color: white;
+    box-shadow: 0 2px 8px rgba($primary, 0.25);
     
     &:hover:not(:disabled) {
-      background: $primary-light;
+      background: linear-gradient(135deg, $primary-light 0%, $primary 100%);
+      box-shadow: 0 4px 16px rgba($primary, 0.35);
+      transform: translateY(-1px);
     }
     
     &:active:not(:disabled) {
-      background: $primary-dark;
+      background: linear-gradient(135deg, $primary-dark 0%, $primary 100%);
+      box-shadow: 0 2px 4px rgba($primary, 0.2);
+      transform: translateY(0);
     }
   }
   
   &--secondary {
     background: transparent;
     color: $primary;
-    border: 1px solid $primary;
+    border: 1.5px solid rgba($primary, 0.3);
     
     &:hover:not(:disabled) {
-      background: rgba($primary, 0.1);
+      background: rgba($primary, 0.08);
+      border-color: $primary;
+    }
+    
+    &:active:not(:disabled) {
+      background: rgba($primary, 0.15);
     }
   }
   
   &--accent {
-    background: $accent;
+    background: linear-gradient(135deg, $accent 0%, darken($accent, 8%) 100%);
     color: white;
+    box-shadow: 0 2px 8px rgba($accent, 0.25);
     
     &:hover:not(:disabled) {
-      background: $accent-light;
+      background: linear-gradient(135deg, $accent-light 0%, $accent 100%);
+      box-shadow: 0 4px 16px rgba($accent, 0.35);
+      transform: translateY(-1px);
     }
   }
   
@@ -78,11 +93,14 @@
   }
   
   &--danger {
-    background: $error;
+    background: linear-gradient(135deg, $error 0%, darken($error, 8%) 100%);
     color: white;
+    box-shadow: 0 2px 8px rgba($error, 0.25);
     
     &:hover:not(:disabled) {
-      background: $error-light;
+      background: linear-gradient(135deg, $error-light 0%, $error 100%);
+      box-shadow: 0 4px 16px rgba($error, 0.35);
+      transform: translateY(-1px);
     }
   }
 }
