@@ -3,7 +3,7 @@ import { storage, globalToken } from '@/utils'
 
 const service: AxiosInstance = axios.create({
   baseURL: '',
-  timeout: 15000,
+  timeout: 120000,
   headers: {
     'Content-Type': 'application/json'
   }
