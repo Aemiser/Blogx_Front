@@ -138,7 +138,10 @@ async function fetchArticles() {
     })
     
     const list = res.data?.list
-    articles.value = Array.isArray(list) ? list : []
+    articles.value = Array.isArray(list) ? list.map((item: any) => ({
+      ...item,
+      id: item.ID || item.id
+    })) : []
     total.value = res.data?.count ?? 0
   } catch (error) {
     console.error('Failed to fetch articles:', error)

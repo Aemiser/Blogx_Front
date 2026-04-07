@@ -56,7 +56,12 @@ const props = defineProps<{
 const router = useRouter()
 
 function goDetail() {
-  router.push(`/article/${props.article.id}`)
+  const id = props.article.id
+  if (!id || typeof id !== 'number' || isNaN(id)) {
+    console.error('Invalid article ID:', id)
+    return
+  }
+  router.push(`/article/${id}`)
 }
 </script>
 
