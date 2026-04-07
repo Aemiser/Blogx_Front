@@ -124,15 +124,15 @@ async function handleSearch() {
         page: 1,
         limit: 20
       })
-      results.value = res.data.list
+      results.value = res.data?.list || []
     } else {
       const res = await searchUser({
         key: keyword.value.trim(),
         page: 1,
         limit: 20
       })
-      results.value = res.data.list
-      userResults.value = res.data.list
+      results.value = res.data?.list || []
+      userResults.value = res.data?.list || []
     }
   } catch (error) {
     console.error('Search failed:', error)

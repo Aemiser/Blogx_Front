@@ -148,12 +148,13 @@ async function fetchHistory(isLoadMore = false) {
       page: page.value,
       limit: 20
     })
+    const list = res.data?.list || []
     if (isLoadMore) {
-      history.value.push(...res.data.list)
+      history.value.push(...list)
     } else {
-      history.value = res.data.list
+      history.value = list
     }
-    hasMore.value = res.data.list.length >= 20
+    hasMore.value = list.length >= 20
     if (hasMore.value) {
       page.value++
     }
