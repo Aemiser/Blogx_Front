@@ -203,7 +203,10 @@ async function fetchArticle() {
     }
     
     const res = await getArticleDetail(id)
-    article.value = res.data
+    article.value = {
+      ...res.data,
+      id: res.data.ID || res.data.id
+    }
 
     // 记录浏览
     lookArticle(id).catch(() => {})
