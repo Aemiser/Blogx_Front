@@ -195,6 +195,13 @@ async function fetchArticle() {
   loading.value = true
   try {
     const id = Number(route.params.id)
+    
+    if (!id || isNaN(id)) {
+      console.error('Invalid article ID:', route.params.id)
+      router.replace('/')
+      return
+    }
+    
     const res = await getArticleDetail(id)
     article.value = res.data
 
