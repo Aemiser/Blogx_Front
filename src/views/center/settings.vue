@@ -61,7 +61,7 @@
               rows="4"
             ></textarea>
           </div>
-          <BButton variant="primary" :loading="savingProfile" @click="handleSaveProfile">
+          <BButton variant="primary" size="sm" :loading="savingProfile" @click="handleSaveProfile">
             保存修改
           </BButton>
         </form>

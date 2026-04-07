@@ -6,7 +6,7 @@
   gap: $space-2;
   font-weight: $font-weight-medium;
   border-radius: $radius-lg;
-  transition: all $duration-default cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all $duration-normal cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   white-space: nowrap;
   position: relative;
