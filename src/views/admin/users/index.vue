@@ -136,8 +136,8 @@ async function fetchUsers() {
       limit: limit.value,
       key: searchKeyword.value || undefined
     })
-    users.value = res.data.list
-    total.value = res.data.count
+    users.value = res.data?.list || []
+    total.value = res.data?.count || 0
   } catch (error) {
     console.error('Failed to fetch users:', error)
   }

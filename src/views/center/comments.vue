@@ -58,12 +58,13 @@ async function fetchComments(isLoadMore = false) {
       page: page.value,
       limit: 20
     })
+    const list = res.data?.list || []
     if (isLoadMore) {
-      comments.value.push(...res.data.list)
+      comments.value.push(...list)
     } else {
-      comments.value = res.data.list
+      comments.value = list
     }
-    hasMore.value = res.data.list.length >= 20
+    hasMore.value = list.length >= 20
     if (hasMore.value) {
       page.value++
     }

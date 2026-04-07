@@ -185,8 +185,8 @@ async function fetchLogs() {
       logType: logTypeFilter.value || undefined,
       key: searchKeyword.value || undefined
     })
-    logs.value = res.data.list
-    total.value = res.data.count
+    logs.value = res.data?.list || []
+    total.value = res.data?.count || 0
   } catch (error) {
     console.error('Failed to fetch logs:', error)
   }

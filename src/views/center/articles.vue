@@ -76,20 +76,16 @@ async function fetchArticles(isLoadMore = false) {
       page: page.value,
       limit: 20
     })
+    const list = (res.data?.list || []).map((item: any) => ({
+      ...item,
+      id: item.ID || item.id
+    }))
     if (isLoadMore) {
-      const list = res.data.list.map((item: any) => ({
-        ...item,
-        id: item.ID || item.id
-      }))
       articles.value.push(...list)
     } else {
-      const list = res.data.list.map((item: any) => ({
-        ...item,
-        id: item.ID || item.id
-      }))
       articles.value = list
     }
-    hasMore.value = res.data.list.length >= 20
+    hasMore.value = list.length >= 20
     if (hasMore.value) {
       page.value++
     }

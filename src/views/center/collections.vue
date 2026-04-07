@@ -165,7 +165,7 @@ async function fetchCollections() {
       page: 1,
       limit: 20
     })
-    collections.value = res.data.list
+    collections.value = res.data?.list || []
     
     // 如果没有收藏夹，创建一个默认收藏夹
     if (collections.value.length === 0) {
@@ -175,7 +175,7 @@ async function fetchCollections() {
         page: 1,
         limit: 20
       })
-      collections.value = res2.data.list
+      collections.value = res2.data?.list || []
     }
     
     if (collections.value.length > 0) {
@@ -200,7 +200,7 @@ async function fetchArticles(collectId: number) {
       page: 1,
       limit: 20
     })
-    articles.value = res.data.list
+    articles.value = res.data?.list || []
   } catch (error) {
     console.error('Failed to fetch articles:', error)
     articles.value = []

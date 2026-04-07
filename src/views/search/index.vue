@@ -144,7 +144,7 @@ async function handleSearch() {
 async function fetchTags() {
   try {
     const res = await getTagAggregation()
-    tags.value = res.data.list
+    tags.value = res.data?.list || []
   } catch (error) {
     console.error('Failed to fetch tags:', error)
   }

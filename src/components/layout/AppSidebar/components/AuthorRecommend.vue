@@ -32,7 +32,7 @@ const authors = ref<RecommendAuthor[]>([])
 async function fetchAuthors() {
   try {
     const res = await getRecommendAuthors(1, 5)
-    authors.value = res.data.list
+    authors.value = res.data?.list || []
   } catch (error) {
     console.error('Failed to fetch authors:', error)
   }

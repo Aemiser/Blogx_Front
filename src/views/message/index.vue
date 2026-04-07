@@ -217,7 +217,7 @@ async function fetchGlobalMessages() {
   loading.value = true
   try {
     const res = await getGlobalNotificationList(1)
-    globalMessages.value = res.data.list
+    globalMessages.value = res.data?.list || []
     await fetchUnreadCount()
   } catch (error) {
     console.error('Failed to fetch global messages:', error)
@@ -251,12 +251,13 @@ async function fetchMessages(isLoadMore = false) {
   
   try {
     const res = await getSiteMsgList(activeTab.value as 1 | 2 | 3, page.value)
-    total.value = res.data.count
+    total.value = res.data?.count || 0
+    const list = res.data?.list || []
     
     if (isLoadMore) {
-      messages.value = [...messages.value, ...res.data.list]
+      messages.value = [...messages.value, ...list]
     } else {
-      messages.value = res.data.list
+      messages.value = list
     }
     
     await fetchUnreadCount()

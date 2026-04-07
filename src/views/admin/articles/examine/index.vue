@@ -139,7 +139,7 @@ async function fetchArticles() {
       page: 1,
       limit: 100
     })
-    articles.value = res.data.list
+    articles.value = res.data?.list || []
   } catch (error) {
     console.error('Failed to fetch articles:', error)
   }

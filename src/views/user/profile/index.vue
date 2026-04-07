@@ -514,8 +514,8 @@ async function fetchUserArticles() {
       page: page.value,
       limit: limit
     })
-    articles.value = res.data.list
-    total.value = res.data.count
+    articles.value = res.data?.list || []
+    total.value = res.data?.count || 0
   } catch (err) {
     console.error('Failed to fetch articles:', err)
     error.value = '加载文章失败，请稍后重试'

@@ -225,7 +225,7 @@ async function fetchArticle() {
 async function fetchComments(articleID: number) {
   try {
     const res = await getCommentTree(articleID)
-    comments.value = res.data.list
+    comments.value = res.data?.list || []
   } catch (error) {
     console.error('Failed to fetch comments:', error)
   }
@@ -255,8 +255,8 @@ async function handleCollect() {
     try {
         // Fetch user's collections
         const res = await getCollectionList({ type: 1, UserID: 0, page: 1, limit: 100 })
-        collections.value = res.data.list.map(item => ({
-            id: item.id,
+        collections.value = (res.data?.list || []).map((item: any) => ({
+            id: item.ID || item.id,
             title: item.title,
             isDefault: item.isDefault
         }))

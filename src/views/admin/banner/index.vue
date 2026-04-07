@@ -203,8 +203,8 @@ async function fetchBanners() {
       page: String(page.value),
       limit: String(limit.value)
     })
-    banners.value = res.data.list || []
-    total.value = res.data.count || 0
+    banners.value = res.data?.list || []
+    total.value = res.data?.count || 0
   } catch (error) {
     console.error('Failed to fetch banners:', error)
   }

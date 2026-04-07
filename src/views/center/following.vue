@@ -37,7 +37,7 @@ async function fetchFollowingList() {
     const userId = userStore.userInfo?.userID
     if (!userId) return
     const res = await getFollowingList(userId)
-    followingList.value = res.data.list
+    followingList.value = res.data?.list || []
   } catch (error) {
     console.error('Failed to fetch following list:', error)
   }

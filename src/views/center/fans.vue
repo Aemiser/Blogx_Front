@@ -38,7 +38,7 @@ async function fetchFansList() {
     const userId = userStore.userInfo?.userID
     if (!userId) return
     const res = await getFansList(userId)
-    fansList.value = res.data.list
+    fansList.value = res.data?.list || []
   } catch (error) {
     console.error('Failed to fetch fans list:', error)
   }

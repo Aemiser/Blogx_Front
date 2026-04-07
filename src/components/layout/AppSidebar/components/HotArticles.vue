@@ -31,7 +31,7 @@ const articles = ref<RecommendArticle[]>([])
 async function fetchArticles() {
   try {
     const res = await getRecommendArticles(10)
-    articles.value = res.data.list
+    articles.value = res.data?.list || []
   } catch (error) {
     console.error('Failed to fetch hot articles:', error)
   }
