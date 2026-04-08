@@ -191,28 +191,44 @@ function goDetail() {
       width: 100%;
       height: 160px;
     }
+    
+    &__content {
+      padding: $space-3;
+    }
+    
+    &__title {
+      font-size: $text-base;
+    }
+    
+    &__abstract {
+      display: none;
+    }
+    
+    &__meta {
+      font-size: 11px;
+    }
   }
 }
 
 // 深色主题
 [data-theme="dark"] .article-card {
-  background: $dark-bg-card;
+  background: var(--bg-card);
   
   &__cover--default {
-    background: $dark-bg-tertiary;
-    color: $dark-text-quaternary;
+    background: var(--bg-tertiary);
+    color: var(--text-quaternary);
   }
   
   &__title {
-    color: $dark-text-primary;
+    color: var(--text-primary);
     
     &:hover {
-      color: $primary;
+      color: var(--primary);
     }
   }
   
   &__abstract {
-    color: $dark-text-secondary;
+    color: var(--text-secondary);
   }
 }
 </style>

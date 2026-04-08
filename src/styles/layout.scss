@@ -126,8 +126,16 @@
     height: 56px;
     padding: 0 $space-4;
     
+    &__left {
+      gap: $space-3;
+    }
+    
     &__center {
-      padding: 0 $space-4;
+      display: none;
+    }
+    
+    &__right {
+      gap: $space-2;
     }
   }
   
@@ -137,6 +145,10 @@
   }
   
   .app-container {
-    padding: 0 $space-4;
+    padding: 0 $space-3;
+  }
+  
+  .app-content {
+    gap: $space-4;
   }
 }

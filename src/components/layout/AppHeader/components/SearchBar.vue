@@ -1,6 +1,12 @@
 <template>
   <div class="search-wrapper">
-        <button class="ai-tag" @click="showAiChat = true" title="AI 助手">
+    <button class="mobile-search-btn" @click="showMobileSearch = true">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="M21 21l-4.35-4.35"/>
+      </svg>
+    </button>
+    <button class="ai-tag" @click="showAiChat = true" title="AI 助手">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/>
         <path d="M16 14H8a4 4 0 0 0-4 4v2h16v-2a4 4 0 0 0-4-4z"/>
@@ -44,6 +50,7 @@ const router = useRouter()
 const keyword = ref('')
 const isFocused = ref(false)
 const showAiChat = ref(false)
+const showMobileSearch = ref(false)
 
 function handleSearch() {
   if (keyword.value.trim()) {
@@ -152,16 +159,45 @@ function handleSearch() {
 }
 
 @media (max-width: $breakpoint-md) {
+  .search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+  }
+  
+  .mobile-search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: $radius-full;
+    color: var(--text-secondary);
+    cursor: pointer;
+    
+    &:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+  }
+  
   .search-bar {
-    width: 100%;
+    display: none;
     
     &.focused {
+      display: block;
       width: 100%;
     }
   }
   
   .ai-tag {
-    flex-shrink: 0;
+    display: none;
+  }
+  
+  .search-btn {
+    display: none;
   }
 }
 </style>
