@@ -175,6 +175,8 @@ function viewArticle(id: number) {
 }
 
 async function approveArticle(id: number) {
+  console.log('approveArticle 收到的 id:', id)
+  console.log('articles 列表:', articles.value)
   try {
     await examineArticle({ articleID: id, status: 3 })
     const index = articles.value.findIndex(a => a.id === id)
