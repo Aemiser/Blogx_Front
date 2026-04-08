@@ -130,7 +130,10 @@ function convertKeysToSnakeCase(obj: any): any {
   if (obj !== null && typeof obj === 'object') {
     const result: any = {}
     for (const key in obj) {
-      const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase()
+      // 转换: articleID -> article_id, userID -> user_id
+      const snakeKey = key.replace(/([A-Z]+)/g, (m) => {
+        return '_' + m.toLowerCase()
+      }).replace(/^_/, '')
       result[snakeKey] = convertKeysToSnakeCase(obj[key])
     }
     return result
