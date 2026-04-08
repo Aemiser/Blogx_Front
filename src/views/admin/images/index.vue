@@ -51,7 +51,6 @@
               <input 
                 type="checkbox" 
                 :checked="selectedIds.includes(img.id)"
-                @click.stop="toggleSelect(img.id)"
               />
             </div>
             <div class="image-preview" @click.stop="handleImageClick(img)">
