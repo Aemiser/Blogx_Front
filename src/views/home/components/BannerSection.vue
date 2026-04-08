@@ -255,5 +255,14 @@ onUnmounted(() => {
   .banner-carousel__next {
     display: none;
   }
+  
+  .banner-carousel__dot {
+    width: 6px;
+    height: 6px;
+    
+    &.active {
+      width: 18px;
+    }
+  }
 }
 </style>

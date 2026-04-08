@@ -51,4 +51,10 @@ function handleCategoryChange(id: number | undefined) {
 .home-page {
   padding-bottom: $space-8;
 }
+
+@media (max-width: $breakpoint-md) {
+  .home-page {
+    padding-bottom: $space-4;
+  }
+}
 </style>

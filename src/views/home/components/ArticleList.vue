@@ -309,8 +309,26 @@ onMounted(() => {
 [data-theme="dark"] {
   .article-card-skeleton,
   .page-btn {
-    background: $dark-bg-card;
-    border-color: $dark-border;
+    background: var(--bg-card);
+    border-color: var(--border);
+    color: var(--text-secondary);
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .article-list__pagination {
+    gap: $space-1;
+    padding: $space-3 0;
+  }
+  
+  .page-btn {
+    min-width: 32px;
+    height: 32px;
+    font-size: $text-xs;
+  }
+  
+  .page-ellipsis {
+    display: none;
   }
 }
 </style>

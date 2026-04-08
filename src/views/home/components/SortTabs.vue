@@ -155,6 +155,33 @@ function handleClick(value: number) {
 }
 
 [data-theme="dark"] .sort-tabs {
-  background: $dark-bg-card;
+  background: var(--bg-card);
+}
+
+@media (max-width: $breakpoint-md) {
+  .sort-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: $space-2 $space-3;
+    
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  
+  .sort-tab {
+    padding: $space-2 $space-3;
+    white-space: nowrap;
+    font-size: $text-xs;
+    
+    span {
+      display: none;
+    }
+    
+    &.active span {
+      display: inline;
+    }
+  }
 }
 </style>
