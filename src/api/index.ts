@@ -121,8 +121,8 @@ service.interceptors.response.use(
   (response) => {
     const res = response.data as any
 
-    const successCodes = [0, 1001, 200]
-    if (res.code !== undefined && !successCodes.includes(res.code)) {
+    // code 为 0 表示成功，其他表示失败
+    if (res.code !== undefined && res.code !== 0) {
       const msg = getErrorMessage(res.code)
       return Promise.reject(new Error(msg))
     }

@@ -203,9 +203,12 @@ async function fetchArticle() {
     }
     
     const res = await getArticleDetail(id)
+    const data = res.data
     article.value = {
-      ...res.data,
-      id: res.data.ID || res.data.id
+      ...data,
+      id: data.ID || data.id,
+      createdAt: data.createdAt || data.CreatedAt,
+      updatedAt: data.updatedAt || data.UpdatedAt
     }
 
     // 记录浏览
