@@ -68,11 +68,51 @@
         </div>
       </div>
 
-      <aside class="app-content__sidebar">
+      <aside class="app-content__sidebar desktop-only">
         <ArticleAuthor v-if="article" :author="article" />
         <TableOfContents v-if="article" :content="article.content" :article="article" />
       </aside>
     </div>
+    
+    <!-- 移动端目录按钮 -->
+    <button v-if="article && tocItems.length > 0" class="mobile-toc-btn" @click="showMobileToc = true">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    
+    <!-- 移动端目录抽屉 -->
+    <teleport to="body">
+      <transition name="slide">
+        <div v-if="showMobileToc" class="mobile-toc-overlay" @click.self="showMobileToc = false">
+          <div class="mobile-toc-drawer">
+            <div class="mobile-toc-header">
+              <h3>目录</h3>
+              <button class="close-btn" @click="showMobileToc = false">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <nav class="mobile-toc-list">
+              <a 
+                v-for="item in tocItems" 
+                :key="item.id"
+                :href="`#${item.id}`"
+                class="toc-item"
+                :class="{ [`toc-level-${item.level}`]: true }"
+                @click="showMobileToc = false"
+              >
+                {{ item.text }}
+              </a>
+            </nav>
+          </div>
+        </div>
+      </transition>
+    </teleport>
   </div>
 </template>
 
@@ -110,6 +150,30 @@ const articleBodyRef = ref<HTMLElement | null>(null)
 const showCollectDialog = ref(false)
 const collections = ref<Array<{ id: number; title: string; isDefault: boolean }>>([])
 const selectedCollectId = ref(0)
+const showMobileToc = ref(false)
+
+interface TocItem {
+  id: string
+  text: string
+  level: number
+}
+
+const tocItems = computed<TocItem[]>(() => {
+  if (!article.value?.content) return []
+  
+  const headingRegex = /^(#{1,6})\s+(.+)$/gm
+  const items: TocItem[] = []
+  let match
+  
+  while ((match = headingRegex.exec(article.value.content)) !== null) {
+    const level = match[1].length
+    const text = match[2]
+    const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '')
+    items.push({ id, text, level })
+  }
+  
+  return items
+})
 
 const md = new MarkdownIt({
   html: true,
@@ -547,8 +611,179 @@ onMounted(() => {
 }
 
 @media (max-width: $breakpoint-lg) {
-  .app-content__sidebar {
+  .app-content__sidebar.desktop-only {
     display: none;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .article-detail {
+    padding: $space-4 0;
+  }
+  
+  .article-detail__content {
+    padding: $space-4;
+    border-radius: $radius-md;
+  }
+  
+  .article-head {
+    padding-bottom: $space-4;
+    margin-bottom: $space-4;
+  }
+  
+  .article-title {
+    font-size: $text-xl;
+  }
+  
+  .article-date {
+    font-size: 11px;
+  }
+  
+  .article-tags {
+    .tag {
+      font-size: 11px;
+      padding: 2px 6px;
+    }
+  }
+  
+  .article-body {
+    font-size: $text-base;
+  }
+  
+  .article-comments {
+    padding: $space-4;
+    margin-top: $space-4;
+    border-radius: $radius-md;
+  }
+  
+  .comments-title {
+    font-size: $text-base;
+    margin-bottom: $space-4;
+  }
+  
+  .comment-form {
+    margin-bottom: $space-4;
+  }
+  
+  /* 移动端目录按钮 */
+  .mobile-toc-btn {
+    display: flex;
+    position: fixed;
+    right: $space-4;
+    bottom: $space-4;
+    width: 48px;
+    height: 48px;
+    border-radius: $radius-full;
+    background: var(--primary);
+    color: white;
+    border: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: $shadow-lg;
+    cursor: pointer;
+    z-index: 50;
+    
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+  
+  /* 移动端目录抽屉 */
+  .mobile-toc-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+  }
+  
+  .mobile-toc-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 80vw;
+    background: var(--bg-card);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .mobile-toc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $space-4;
+    border-bottom: 1px solid var(--border-light);
+    
+    h3 {
+      font-size: $text-lg;
+      font-weight: $font-weight-semibold;
+      color: var(--text-primary);
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      padding: $space-2;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+  }
+  
+  .mobile-toc-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: $space-3;
+  }
+  
+  .mobile-toc-list .toc-item {
+    display: block;
+    padding: $space-2 $space-3;
+    color: var(--text-secondary);
+    font-size: $text-sm;
+    text-decoration: none;
+    border-radius: $radius-md;
+    margin-bottom: 2px;
+    
+    &:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    
+    &.toc-level-1 {
+      font-weight: $font-weight-medium;
+      color: var(--text-primary);
+    }
+    
+    &.toc-level-2 {
+      padding-left: $space-5;
+    }
+    
+    &.toc-level-3 {
+      padding-left: $space-6;
+      font-size: $text-xs;
+    }
+  }
+  
+  .slide-enter-active,
+  .slide-leave-active {
+    transition: all 0.3s ease;
+    
+    .mobile-toc-drawer {
+      transition: transform 0.3s ease;
+    }
+  }
+  
+  .slide-enter-from,
+  .slide-leave-to {
+    background: transparent;
+    
+    .mobile-toc-drawer {
+      transform: translateX(100%);
+    }
   }
 }
 
