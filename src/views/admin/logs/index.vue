@@ -42,6 +42,9 @@
               <th style="width: 60px">ID</th>
               <th style="width: 80px">类型</th>
               <th style="width: 180px">时间</th>
+              <th style="width: 100px">操作人</th>
+              <th style="width: 120px">地址</th>
+              <th style="width: 130px">IP</th>
               <th>内容摘要</th>
               <th style="width: 100px">操作</th>
             </tr>
@@ -61,7 +64,21 @@
                   {{ getTypeName(log.logType) }}
                 </span>
               </td>
-              <td>{{ formatDate(log.createdAt) }}</td>
+              <td>{{ formatDate(log.createdAt || log.CreatedAt) }}</td>
+              <td>
+                <div class="user-info" v-if="log.userNickName || log.userAvatar">
+                  <img 
+                    v-if="log.userAvatar" 
+                    :src="getAvatarUrl(log.userAvatar)" 
+                    class="user-avatar" 
+                    alt="头像"
+                  />
+                  <span class="user-name">{{ log.userNickName || '未知' }}</span>
+                </div>
+                <span v-else class="text-muted">-</span>
+              </td>
+              <td>{{ log.addr || '-' }}</td>
+              <td>{{ log.ip || '-' }}</td>
               <td class="content-cell">
                 <div class="content-preview" @click="viewLogDetail(log)">
                   {{ getContentPreview(log.content) }}
@@ -147,6 +164,7 @@
 import { ref, computed, onMounted } from 'vue'
 import type { LogInfo } from '@/types'
 import { getLogList, deleteLogs, readLog } from '@/api/modules/logs'
+import { getAvatarUrl } from '@/utils/image'
 
 const logs = ref<LogInfo[]>([])
 const logTypeFilter = ref('')
@@ -768,5 +786,32 @@ onMounted(() => {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  .user-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .user-name {
+    font-size: 12px;
+    color: #333;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.text-muted {
+  color: #999;
+  font-size: 12px;
 }
 </style>
