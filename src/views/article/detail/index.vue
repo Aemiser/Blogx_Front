@@ -271,9 +271,11 @@ async function fetchArticle() {
     article.value = {
       ...data,
       id: data.ID || data.id,
-      createdAt: data.createdAt || data.CreatedAt,
-      updatedAt: data.updatedAt || data.UpdatedAt
+      createdAt: data.CreatedAt || data.createdAt,
+      updatedAt: data.UpdatedAt || data.updatedAt
     }
+    console.log('文章详情返回数据:', data)
+    console.log('article.id:', article.value.id)
 
     // 记录浏览
     lookArticle(id).catch(() => {})
