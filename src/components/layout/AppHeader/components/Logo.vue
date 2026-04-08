@@ -17,4 +17,12 @@
     letter-spacing: -0.5px;
   }
 }
+
+@media (max-width: $breakpoint-md) {
+  .logo {
+    &__text {
+      font-size: $text-lg;
+    }
+  }
+}
 </style>

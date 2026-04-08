@@ -189,12 +189,41 @@ onUnmounted(() => {
 
 [data-theme="dark"] .user-dropdown {
   &__menu {
-    background: $dark-bg-card;
-    border-color: $dark-border;
+    background: var(--bg-card);
+    border-color: var(--border);
   }
   
   &__divider {
-    background: $dark-border;
+    background: var(--border);
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .user-dropdown {
+    &__trigger {
+      padding: 2px;
+    }
+    
+    &__menu {
+      position: fixed;
+      top: 56px;
+      right: $space-2;
+      width: calc(100vw - #{$space-4});
+      max-width: 300px;
+      border-radius: $radius-lg;
+      box-shadow: $shadow-xl;
+      max-height: calc(100vh - 70px);
+      overflow-y: auto;
+    }
+    
+    &__header {
+      padding: $space-4;
+    }
+    
+    &__item {
+      padding: $space-3 $space-4;
+      font-size: $text-base;
+    }
   }
 }
 </style>
