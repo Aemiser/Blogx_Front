@@ -1,6 +1,20 @@
 <template>
   <div class="center-page">
     <div class="app-container">
+      <!-- 移动端顶部导航 -->
+      <div class="mobile-tabs">
+        <router-link
+          v-for="item in menuItems"
+          :key="item.path"
+          :to="item.path"
+          class="mobile-tab"
+          active-class="active"
+        >
+          <span class="nav-icon">{{ item.icon }}</span>
+          <span class="nav-text">{{ item.label }}</span>
+        </router-link>
+      </div>
+      
       <div class="center-layout">
         <aside class="center-sidebar card">
           <nav class="sidebar-nav">
@@ -26,13 +40,13 @@
 
 <script setup lang="ts">
 const menuItems = [
-  { path: '/center/info', icon: '👤', label: '个人信息' },
-  { path: '/center/collections', icon: '📁', label: '收藏夹' },
-  { path: '/center/articles', icon: '📝', label: '发布的文章' },
-  { path: '/center/comments', icon: '💬', label: '发布的评论' },
-  { path: '/center/history', icon: '📖', label: '浏览历史' },
-  { path: '/center/following', icon: '❤️', label: '我的关注' },
-  { path: '/center/fans', icon: '👥', label: '我的粉丝' },
+  { path: '/center/info', icon: '👤', label: '我' },
+  { path: '/center/collections', icon: '📁', label: '收藏' },
+  { path: '/center/articles', icon: '📝', label: '文章' },
+  { path: '/center/comments', icon: '💬', label: '评论' },
+  { path: '/center/history', icon: '📖', label: '历史' },
+  { path: '/center/following', icon: '❤️', label: '关注' },
+  { path: '/center/fans', icon: '👥', label: '粉丝' },
   { path: '/center/settings', icon: '⚙️', label: '设置' }
 ]
 </script>
@@ -94,5 +108,72 @@ const menuItems = [
 
 .nav-text {
   font-size: $text-base;
+}
+
+/* 移动端顶部导航 */
+.mobile-tabs {
+  display: none;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  background: var(--bg-card);
+  border-radius: $radius-lg;
+  padding: $space-2;
+  margin-bottom: $space-4;
+  gap: $space-1;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.mobile-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: $space-2 $space-3;
+  border-radius: $radius-md;
+  color: var(--text-tertiary);
+  text-decoration: none;
+  font-size: $text-xs;
+  white-space: nowrap;
+  transition: all $duration-fast;
+
+  &:hover {
+    color: var(--text-secondary);
+    background: var(--bg-hover);
+  }
+
+  &.active {
+    color: var(--primary);
+    background: rgba($primary, 0.1);
+  }
+
+  .nav-icon {
+    font-size: $text-lg;
+  }
+
+  .nav-text {
+    font-size: $text-xs;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .center-page {
+    padding: $space-4 0;
+  }
+
+  .mobile-tabs {
+    display: flex;
+  }
+
+  .center-sidebar {
+    display: none;
+  }
+
+  .center-layout {
+    gap: $space-4;
+  }
 }
 </style>
