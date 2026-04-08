@@ -110,7 +110,11 @@ service.interceptors.request.use(
     }
 
     // 转换 data 中的驼峰为下划线 (articleID -> article_id)
-    if (config.data && typeof config.data === 'object') {
+    // 跳过 FormData 和 Blob 类型
+    if (config.data && typeof config.data === 'object' && 
+        !(config.data instanceof FormData) && 
+        !(config.data instanceof Blob) &&
+        !(config.data instanceof ArrayBuffer)) {
       config.data = convertKeysToSnakeCase(config.data)
     }
     
