@@ -913,4 +913,72 @@ onMounted(() => {
     transform: translateX(-50%) translateY(0);
   }
 }
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .header-right {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .status-filter,
+  .search-input {
+    width: 100%;
+  }
+  
+  .table-wrapper {
+    overflow-x: scroll;
+  }
+  
+  .table {
+    min-width: 900px;
+  }
+  
+  .card {
+    border-radius: 8px;
+  }
+  
+  .page-title {
+    font-size: 18px;
+  }
+  
+  .article-count {
+    font-size: 12px;
+  }
+  
+  .action-buttons {
+    flex-wrap: wrap;
+  }
+  
+  .action-btn {
+    padding: 4px 4px;
+    font-size: 12px;
+  }
+  
+  .modal-detail,
+  .reject-modal {
+    width: calc(100vw - 32px);
+    margin: 16px;
+  }
+  
+  .modal-body {
+    padding: 16px;
+  }
+  
+  .detail-avatar {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .detail-item {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
 </style>

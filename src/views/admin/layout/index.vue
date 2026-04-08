@@ -1,8 +1,11 @@
 <template>
   <div class="admin-layout">
-    <aside class="admin-sidebar">
+    <!-- 移动端遮罩 -->
+    <div v-if="showMobileMenu" class="mobile-overlay" @click="showMobileMenu = false"></div>
+    
+    <aside class="admin-sidebar" :class="{ 'mobile-open': showMobileMenu }">
       <div class="sidebar-header">
-        <router-link to="/admin" class="logo">
+        <router-link to="/admin" class="logo" @click="showMobileMenu = false">
           <div class="logo-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 2L2 7l10 5 10-5-10-5z"/>
@@ -12,12 +15,18 @@
           </div>
           <span class="logo-text">管理后台</span>
         </router-link>
+        <button class="mobile-close-btn" @click="showMobileMenu = false">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
       
       <nav class="sidebar-nav">
         <div class="nav-section">
           <div class="nav-section-title">概览</div>
-          <router-link to="/admin" class="nav-item" :class="{ active: route.path === '/admin' }">
+          <router-link to="/admin" class="nav-item" :class="{ active: route.path === '/admin' }" @click="showMobileMenu = false">
             <span class="nav-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="3" width="7" height="7"/>
@@ -32,7 +41,7 @@
         
         <div class="nav-section">
           <div class="nav-section-title">内容管理</div>
-          <router-link to="/admin/users" class="nav-item" :class="{ active: route.path === '/admin/users' }">
+          <router-link to="/admin/users" class="nav-item" :class="{ active: route.path === '/admin/users' }" @click="showMobileMenu = false">
             <span class="nav-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -43,7 +52,7 @@
             </span>
             <span class="nav-text">用户管理</span>
           </router-link>
-          <router-link to="/admin/articles" class="nav-item" :class="{ active: route.path === '/admin/articles' }">
+          <router-link to="/admin/articles" class="nav-item" :class="{ active: route.path === '/admin/articles' }" @click="showMobileMenu = false">
             <span class="nav-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -54,7 +63,7 @@
             </span>
             <span class="nav-text">文章管理</span>
           </router-link>
-          <router-link to="/admin/articles/examine" class="nav-item" :class="{ active: route.path === '/admin/articles/examine' }">
+          <router-link to="/admin/articles/examine" class="nav-item" :class="{ active: route.path === '/admin/articles/examine' }" @click="showMobileMenu = false">
             <span class="nav-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
@@ -63,7 +72,7 @@
             </span>
             <span class="nav-text">文章审核</span>
           </router-link>
-          <router-link to="/admin/banner" class="nav-item" :class="{ active: route.path === '/admin/banner' }">
+          <router-link to="/admin/banner" class="nav-item" :class="{ active: route.path === '/admin/banner' }" @click="showMobileMenu = false">
             <span class="nav-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -77,7 +86,7 @@
         
         <div class="nav-section">
           <div class="nav-section-title">系统设置</div>
-          <router-link to="/admin/site" class="nav-item" :class="{ active: route.path === '/admin/site' }">
+          <router-link to="/admin/site" class="nav-item" :class="{ active: route.path === '/admin/site' }" @click="showMobileMenu = false">
             <span class="nav-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="3"/>
@@ -86,7 +95,7 @@
             </span>
             <span class="nav-text">站点管理</span>
           </router-link>
-          <router-link to="/admin/images" class="nav-item" :class="{ active: route.path === '/admin/images' }">
+          <router-link to="/admin/images" class="nav-item" :class="{ active: route.path === '/admin/images' }" @click="showMobileMenu = false">
             <span class="nav-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -96,7 +105,7 @@
             </span>
             <span class="nav-text">图片管理</span>
           </router-link>
-          <router-link to="/admin/upload" class="nav-item" :class="{ active: route.path === '/admin/upload' }">
+          <router-link to="/admin/upload" class="nav-item" :class="{ active: route.path === '/admin/upload' }" @click="showMobileMenu = false">
             <span class="nav-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -106,7 +115,7 @@
             </span>
             <span class="nav-text">图片上传</span>
           </router-link>
-          <router-link to="/admin/logs" class="nav-item" :class="{ active: route.path === '/admin/logs' }">
+          <router-link to="/admin/logs" class="nav-item" :class="{ active: route.path === '/admin/logs' }" @click="showMobileMenu = false">
             <span class="nav-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -133,6 +142,13 @@
     
     <main class="admin-main">
       <header class="admin-header">
+        <button class="mobile-menu-btn" @click="showMobileMenu = true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
         <div class="header-title">{{ pageTitle }}</div>
         <div class="header-actions">
           <div class="admin-avatar">
@@ -151,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { globalToken } from '@/utils'
@@ -159,6 +175,7 @@ import { getAvatarUrl } from '@/utils/image'
 
 const route = useRoute()
 const userStore = useUserStore()
+const showMobileMenu = ref(false)
 
 onMounted(() => {
   if (userStore.token) {
@@ -364,5 +381,102 @@ const pageTitle = computed(() => {
 .admin-content {
   flex: 1;
   padding: 24px 28px;
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 260px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 200;
+    
+    &.mobile-open {
+      transform: translateX(0);
+    }
+  }
+  
+  .mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 150;
+  }
+  
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+    .logo {
+      flex: 1;
+    }
+    
+    .mobile-close-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 8px;
+      color: #e2e8f0;
+      cursor: pointer;
+    }
+  }
+  
+  .admin-main {
+    margin-left: 0;
+  }
+  
+  .admin-header {
+    height: 56px;
+    padding: 0 16px;
+    
+    .mobile-menu-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: none;
+      border: none;
+      color: #475569;
+      cursor: pointer;
+      
+      &:hover {
+        background: #f1f5f9;
+        border-radius: 8px;
+      }
+    }
+    
+    .header-title {
+      font-size: 16px;
+      margin-left: 12px;
+    }
+    
+    .admin-name {
+      display: none;
+    }
+  }
+  
+  .admin-content {
+    padding: 16px;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-close-btn,
+  .mobile-menu-btn,
+  .mobile-overlay {
+    display: none !important;
+  }
 }
 </style>
