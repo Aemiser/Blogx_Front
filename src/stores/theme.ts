@@ -3,41 +3,68 @@ import { ref, watch } from 'vue'
 import { storage } from '@/utils'
 
 export type ThemeMode = 'light' | 'dark' | 'system'
+export type AccentTheme = 'default' | 'sakura' | 'miku' | 'hanabi'
+
+export interface ThemeConfig {
+  mode: ThemeMode
+  accent: AccentTheme
+}
 
 export const useThemeStore = defineStore('theme', () => {
-  const theme = ref<ThemeMode>('light')
+  const mode = ref<ThemeMode>('light')
+  const accent = ref<AccentTheme>('default')
   const isDark = ref(false)
 
-  function setTheme(mode: ThemeMode) {
-    theme.value = mode
-    storage.setTheme(mode)
-    applyTheme(mode)
+  function setTheme(newMode: ThemeMode) {
+    mode.value = newMode
+    saveConfig()
+    applyTheme()
   }
 
-  function applyTheme(mode: ThemeMode) {
-    if (mode === 'system') {
+  function setAccent(newAccent: AccentTheme) {
+    accent.value = newAccent
+    saveConfig()
+    applyTheme()
+  }
+
+  function applyTheme() {
+    if (mode.value === 'system') {
       isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
     } else {
-      isDark.value = mode === 'dark'
+      isDark.value = mode.value === 'dark'
     }
+    
     document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
+    document.documentElement.setAttribute('data-accent', accent.value)
   }
 
   function toggleTheme() {
-    const newTheme = isDark.value ? 'light' : 'dark'
-    setTheme(newTheme)
+    const newMode = isDark.value ? 'light' : 'dark'
+    setTheme(newMode)
+  }
+
+  function saveConfig() {
+    const config: ThemeConfig = {
+      mode: mode.value,
+      accent: accent.value
+    }
+    storage.setTheme(config)
+  }
+
+  function loadConfig(): ThemeConfig {
+    return storage.getTheme() as ThemeConfig
   }
 
   function init() {
-    const savedTheme = storage.getTheme() as ThemeMode | null
-    if (savedTheme) {
-      theme.value = savedTheme
+    const saved = loadConfig()
+    if (saved) {
+      mode.value = saved.mode || 'light'
+      accent.value = saved.accent || 'default'
     }
-    applyTheme(theme.value)
+    applyTheme()
 
-    // 监听系统主题变化
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      if (theme.value === 'system') {
+      if (mode.value === 'system') {
         isDark.value = e.matches
         document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
       }
@@ -45,9 +72,11 @@ export const useThemeStore = defineStore('theme', () => {
   }
 
   return {
-    theme,
+    mode,
+    accent,
     isDark,
     setTheme,
+    setAccent,
     toggleTheme,
     init
   }

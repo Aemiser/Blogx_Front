@@ -28,12 +28,13 @@ export const storage = {
     localStorage.removeItem(USER_KEY)
   },
 
-  getTheme(): string | null {
-    return localStorage.getItem(THEME_KEY)
+  getTheme<T>(): T | null {
+    const theme = localStorage.getItem(THEME_KEY)
+    return theme ? JSON.parse(theme) : null
   },
 
-  setTheme(theme: string): void {
-    localStorage.setItem(THEME_KEY, theme)
+  setTheme<T>(theme: T): void {
+    localStorage.setItem(THEME_KEY, JSON.stringify(theme))
   },
 
   removeTheme(): void {

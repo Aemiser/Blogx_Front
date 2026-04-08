@@ -143,6 +143,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '设置', requiresAuth: true }
   },
   {
+    path: '/settings/theme',
+    name: 'ThemeSettings',
+    component: () => import('@/views/settings/index.vue'),
+    meta: { title: '主题设置', requiresAuth: true }
+  },
+  {
     path: '/admin',
     name: 'Admin',
     component: () => import('@/views/admin/layout/index.vue'),

@@ -109,16 +109,16 @@
 .input {
   height: 40px;
   padding: 0 $space-4;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   border-radius: $radius-md;
   font-size: $text-base;
-  color: $text-primary;
-  background: $bg-card;
+  color: var(--text-primary);
+  background: var(--bg-card);
   transition: border-color $duration-fast, box-shadow $duration-fast;
   width: 100%;
   
   &::placeholder {
-    color: $text-tertiary;
+    color: var(--text-tertiary);
   }
   
   &:focus {
@@ -128,7 +128,7 @@
   }
   
   &:disabled {
-    background: $bg-secondary;
+    background: var(--bg-secondary);
     cursor: not-allowed;
   }
 }
@@ -136,17 +136,17 @@
 // 文本域
 .textarea {
   padding: $space-3 $space-4;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   border-radius: $radius-md;
   font-size: $text-base;
-  color: $text-primary;
-  background: $bg-card;
+  color: var(--text-primary);
+  background: var(--bg-card);
   resize: vertical;
   min-height: 100px;
   width: 100%;
   
   &::placeholder {
-    color: $text-tertiary;
+    color: var(--text-tertiary);
   }
   
   &:focus {
@@ -158,14 +158,14 @@
 
 // 卡片样式
 .card {
-  background: $bg-card;
+  background: var(--bg-card);
   border-radius: $radius-lg;
   box-shadow: $shadow-sm;
   overflow: hidden;
   
   &__header {
     padding: $space-4 $space-5;
-    border-bottom: 1px solid $border-light;
+    border-bottom: 1px solid var(--border-light);
   }
   
   &__body {
@@ -174,7 +174,7 @@
   
   &__footer {
     padding: $space-4 $space-5;
-    border-top: 1px solid $border-light;
+    border-top: 1px solid var(--border-light);
   }
 }
 
@@ -451,54 +451,50 @@
 // 深色主题下的样式
 [data-theme="dark"] {
   .input {
-    background: $dark-bg-card;
-    border-color: $dark-border;
-    color: $dark-text-primary;
+    background: var(--bg-card);
+    border-color: var(--border);
+    color: var(--text-primary);
     
     &::placeholder {
-      color: $dark-text-tertiary;
-    }
-    
-    &:focus {
-      border-color: $primary;
+      color: var(--text-tertiary);
     }
   }
   
   .textarea {
-    background: $dark-bg-card;
-    border-color: $dark-border;
-    color: $dark-text-primary;
+    background: var(--bg-card);
+    border-color: var(--border);
+    color: var(--text-primary);
   }
   
   .card {
-    background: $dark-bg-card;
+    background: var(--bg-card);
     
     &__header,
     &__footer {
-      border-color: $dark-border;
+      border-color: var(--border);
     }
   }
   
   .tag--default {
-    background: $dark-bg-tertiary;
-    color: $dark-text-secondary;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
   }
   
   .pagination {
     &__btn,
     &__page {
-      background: $dark-bg-card;
-      border-color: $dark-border;
-      color: $dark-text-secondary;
+      background: var(--bg-card);
+      border-color: var(--border);
+      color: var(--text-secondary);
     }
   }
   
   .skeleton {
     background: linear-gradient(
       90deg,
-      $dark-bg-tertiary 25%,
-      $dark-bg-hover 50%,
-      $dark-bg-tertiary 75%
+      var(--bg-tertiary) 25%,
+      var(--bg-hover) 50%,
+      var(--bg-tertiary) 75%
     );
     background-size: 200% 100%;
   }

@@ -122,6 +122,72 @@
           </label>
         </div>
       </div>
+
+      <div class="settings-section">
+        <h3 class="subsection-title">主题设置</h3>
+        <div class="theme-group">
+          <h4 class="theme-group-title">外观模式</h4>
+          <div class="theme-options">
+            <div 
+              class="theme-option" 
+              :class="{ active: themeStore.mode === 'light' }"
+              @click="themeStore.setTheme('light')"
+            >
+              <div class="theme-option-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              </div>
+              <span class="theme-option-name">浅色</span>
+            </div>
+            <div 
+              class="theme-option" 
+              :class="{ active: themeStore.mode === 'dark' }"
+              @click="themeStore.setTheme('dark')"
+            >
+              <div class="theme-option-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              </div>
+              <span class="theme-option-name">深色</span>
+            </div>
+          </div>
+        </div>
+        <div class="theme-group">
+          <h4 class="theme-group-title">主题风格</h4>
+          <div class="theme-options accent-options">
+            <div 
+              class="theme-option accent-option" 
+              :class="{ active: themeStore.accent === 'default' }"
+              @click="themeStore.setAccent('default')"
+            >
+              <div class="theme-option-preview default-preview"></div>
+              <span class="theme-option-name">默认</span>
+            </div>
+            <div 
+              class="theme-option accent-option" 
+              :class="{ active: themeStore.accent === 'sakura' }"
+              @click="themeStore.setAccent('sakura')"
+            >
+              <div class="theme-option-preview sakura-preview"></div>
+              <span class="theme-option-name">樱花粉</span>
+            </div>
+            <div 
+              class="theme-option accent-option" 
+              :class="{ active: themeStore.accent === 'miku' }"
+              @click="themeStore.setAccent('miku')"
+            >
+              <div class="theme-option-preview miku-preview"></div>
+              <span class="theme-option-name">初音蓝</span>
+            </div>
+            <div 
+              class="theme-option accent-option" 
+              :class="{ active: themeStore.accent === 'hanabi' }"
+              @click="themeStore.setAccent('hanabi')"
+            >
+              <div class="theme-option-preview hanabi-preview"></div>
+              <span class="theme-option-name">烟花紫</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 绑定邮箱弹窗 -->
@@ -176,9 +242,12 @@ import { ref, reactive, onMounted } from 'vue'
 import { getUserDetail, updateUser, sendEmail, bindEmail } from '@/api/modules/user'
 import { uploadImage } from '@/api/modules/banner'
 import { getFullImageUrl, getAvatarUrl } from '@/utils/image'
+import { useThemeStore } from '@/stores/theme'
 import BButton from '@/components/base/BButton/index.vue'
 import BAvatar from '@/components/base/BAvatar/index.vue'
 import { toast } from '@/composables/useToast'
+
+const themeStore = useThemeStore()
 
 const userInfo = ref<any>(null)
 const savingProfile = ref(false)
@@ -630,5 +699,101 @@ onMounted(() => {
   .input {
     flex: 1;
   }
+}
+
+.theme-group {
+  margin-bottom: $space-5;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.theme-group-title {
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  color: $text-secondary;
+  margin-bottom: $space-3;
+}
+
+.theme-options {
+  display: flex;
+  gap: $space-3;
+  flex-wrap: wrap;
+}
+
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-3;
+  border-radius: $radius-md;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: all $duration-fast;
+  min-width: 70px;
+  
+  &:hover {
+    border-color: rgba($primary, 0.5);
+  }
+  
+  &.active {
+    border-color: $primary;
+    background: rgba($primary, 0.08);
+  }
+}
+
+.theme-option-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-sm;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  
+  .active & {
+    background: $primary;
+    color: white;
+  }
+}
+
+.theme-option-name {
+  font-size: $text-xs;
+  color: var(--text-secondary);
+  
+  .active & {
+    color: $primary;
+    font-weight: $font-weight-medium;
+  }
+}
+
+.accent-option {
+  padding: $space-2;
+}
+
+.theme-option-preview {
+  width: 40px;
+  height: 28px;
+  border-radius: $radius-sm;
+  overflow: hidden;
+}
+
+.default-preview {
+  background: linear-gradient(135deg, #00a1d6 0%, #fb7299 100%);
+}
+
+.sakura-preview {
+  background: linear-gradient(135deg, #ff6b9d 0%, #ff9ec4 100%);
+}
+
+.miku-preview {
+  background: linear-gradient(135deg, #00e5ff 0%, #00c853 100%);
+}
+
+.hanabi-preview {
+  background: linear-gradient(135deg, #9c27b0 0%, #e91e63 100%);
 }
 </style>

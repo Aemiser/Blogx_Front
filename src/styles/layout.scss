@@ -10,8 +10,8 @@
   left: 0;
   right: 0;
   height: 64px;
-  background: $bg-card;
-  border-bottom: 1px solid $border-light;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
   z-index: 100;
   display: flex;
   align-items: center;
@@ -70,8 +70,8 @@
 }
 
 .app-footer {
-  background: $bg-card;
-  border-top: 1px solid $border-light;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-light);
   padding: $space-8 0;
   margin-top: auto;
   
@@ -80,7 +80,7 @@
     margin: 0 auto;
     padding: 0 $space-6;
     text-align: center;
-    color: $text-tertiary;
+    color: var(--text-tertiary);
     font-size: $text-sm;
   }
   
@@ -91,7 +91,7 @@
     margin-bottom: $space-4;
     
     a {
-      color: $text-secondary;
+      color: var(--text-secondary);
       transition: color $duration-fast;
       
       &:hover {
@@ -104,13 +104,13 @@
 // 深色主题
 [data-theme="dark"] {
   .app-header {
-    background: $dark-bg-secondary;
-    border-color: $dark-border;
+    background: var(--bg-secondary);
+    border-color: var(--border);
   }
   
   .app-footer {
-    background: $dark-bg-secondary;
-    border-color: $dark-border;
+    background: var(--bg-secondary);
+    border-color: var(--border);
   }
 }
 

@@ -12,8 +12,8 @@ html {
 
 body {
   font-family: $font-family-primary;
-  color: $text-primary;
-  background-color: $bg-secondary;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
   line-height: $line-height-normal;
 }
 
@@ -47,8 +47,8 @@ ol {
 // 深色主题
 [data-theme="dark"] {
   body {
-    color: $dark-text-primary;
-    background-color: $dark-bg-primary;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
   }
 }
 
@@ -63,11 +63,11 @@ ol {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: $border-dark;
+  background: var(--border-dark);
   border-radius: $radius-full;
   
   &:hover {
-    background: $text-quaternary;
+    background: var(--text-quaternary);
   }
 }
 
