@@ -1,5 +1,29 @@
 <template>
   <div class="collections-page">
+    <!-- 移动端文件夹选择器 -->
+    <div class="mobile-folder-select">
+      <button class="folder-select-btn" @click="showFolderDropdown = !showFolderDropdown">
+        <div class="folder-select-value">
+          <span>📁</span>
+          <span>{{ currentCollection?.title || '选择收藏夹' }}</span>
+        </div>
+        <span>▼</span>
+      </button>
+      <div v-if="showFolderDropdown" class="folder-dropdown">
+        <div 
+          v-for="collection in collections" 
+          :key="collection.id" 
+          class="folder-option"
+          :class="{ active: selectedCollectionId === collection.id }"
+          @click="selectCollection(collection.id); showFolderDropdown = false"
+        >
+          <span>📁</span>
+          <span class="folder-name">{{ collection.title }}</span>
+          <span class="folder-count">{{ collection.ArticleCount }}</span>
+        </div>
+      </div>
+    </div>
+    
     <div class="collections-layout">
       <aside class="collections-sidebar">
         <div class="sidebar-header">
@@ -143,6 +167,7 @@ const selectedCollectionId = ref<number | null>(null)
 const articles = ref<any[]>([])
 const loading = ref(false)
 const showCreateDialog = ref(false)
+const showFolderDropdown = ref(false)
 
 const newCollection = reactive({
   title: '',
@@ -668,6 +693,85 @@ onMounted(() => {
   &:disabled {
     background: #c9ccd0;
     cursor: not-allowed;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .collections-page {
+    border-radius: $radius-md;
+  }
+  
+  .collections-layout {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .collections-sidebar {
+    display: none;
+  }
+  
+  .mobile-folder-select {
+    display: block;
+  }
+  
+  .main-header {
+    padding: $space-3 $space-4;
+    flex-wrap: wrap;
+    gap: $space-2;
+  }
+  
+  .main-title {
+    font-size: $text-base;
+  }
+  
+  .article-total {
+    font-size: $text-xs;
+  }
+  
+  .articles-content {
+    padding: $space-3 $space-4;
+  }
+  
+  .article-item {
+    flex-direction: column;
+    padding: $space-3;
+    gap: $space-3;
+  }
+  
+  .article-cover {
+    width: 100%;
+    height: 150px;
+  }
+  
+  .article-title {
+    font-size: $text-base;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  
+  .article-abstract {
+    display: none;
+  }
+  
+  .article-meta {
+    flex-wrap: wrap;
+    gap: $space-2;
+  }
+  
+  .meta-author {
+    order: -1;
+    width: 100%;
+    margin-bottom: $space-1;
+  }
+  
+  .meta-stats {
+    gap: $space-2;
+  }
+  
+  .stat-item {
+    font-size: 11px;
   }
 }
 </style>
