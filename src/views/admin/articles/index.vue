@@ -246,7 +246,12 @@ async function fetchArticles() {
       console.log('statusFilter value:', statusFilter.value, 'params.status:', params.status)
     }
     const res = await getArticleList(params)
-    articles.value = res.data.list || []
+    articles.value = (res.data.list || []).map((item: any) => ({
+      ...item,
+      id: item.ID || item.id,
+      createdAt: item.CreatedAt || item.createdAt,
+      updatedAt: item.UpdatedAt || item.updatedAt
+    }))
     total.value = res.data.count || 0
   } catch (error) {
     console.error('Failed to fetch articles:', error)

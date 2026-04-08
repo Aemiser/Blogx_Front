@@ -111,9 +111,7 @@ service.interceptors.request.use(
 
     // 转换 data 中的驼峰为下划线 (articleID -> article_id)
     if (config.data && typeof config.data === 'object') {
-      console.log('请求数据(转换前):', config.data)
       config.data = convertKeysToSnakeCase(config.data)
-      console.log('请求数据(转换后):', config.data)
     }
     
     return config

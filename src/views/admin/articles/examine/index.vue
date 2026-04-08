@@ -139,7 +139,12 @@ async function fetchArticles() {
       page: 1,
       limit: 100
     })
-    articles.value = res.data?.list || []
+    articles.value = (res.data?.list || []).map((item: any) => ({
+      ...item,
+      id: item.ID || item.id,
+      createdAt: item.CreatedAt || item.createdAt,
+      updatedAt: item.UpdatedAt || item.updatedAt
+    }))
   } catch (error) {
     console.error('Failed to fetch articles:', error)
   }
@@ -175,8 +180,6 @@ function viewArticle(id: number) {
 }
 
 async function approveArticle(id: number) {
-  console.log('approveArticle 收到的 id:', id)
-  console.log('articles 列表:', articles.value)
   try {
     await examineArticle({ articleID: id, status: 3 })
     const index = articles.value.findIndex(a => a.id === id)
