@@ -554,44 +554,44 @@ onMounted(() => {
 
 [data-theme="dark"] {
   .article-body {
-    color: $dark-text-primary;
+    color: var(--text-primary);
 
     :deep(code:not(pre code)) {
-      background: rgba($primary, 0.2);
-      color: $accent-light;
+      background: rgba(0, 161, 214, 0.2);
+      color: var(--accent-light);
     }
   }
 
   .article-head {
-    border-color: $dark-border;
+    border-color: var(--border);
   }
 
   .article-title {
-    color: $dark-text-primary;
+    color: var(--text-primary);
   }
 
   .article-date {
-    color: $dark-text-tertiary;
+    color: var(--text-tertiary);
   }
 
   .article-tags {
     .tags-icon {
-      color: $dark-text-tertiary;
+      color: var(--text-tertiary);
     }
 
     .tag {
-      color: $dark-text-secondary;
-      background: $dark-bg-secondary;
+      color: var(--text-secondary);
+      background: var(--bg-secondary);
 
       &:hover {
-        color: $primary;
-        background: rgba($primary, 0.2);
+        color: var(--primary);
+        background: rgba(0, 161, 214, 0.2);
       }
     }
   }
 
   .article-comments {
-    border-color: $dark-border;
+    border-color: var(--border);
   }
 }
 </style>

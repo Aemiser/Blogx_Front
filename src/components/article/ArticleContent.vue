@@ -436,4 +436,68 @@ onMounted(() => {
   background: #eff1f5;
   color: #4c4f69;
 }
+
+/* 深色主题 */
+[data-theme="dark"] .article-markdown-body {
+  color: #cdd6f4;
+}
+
+[data-theme="dark"] .article-markdown-body h1,
+[data-theme="dark"] .article-markdown-body h2,
+[data-theme="dark"] .article-markdown-body h3,
+[data-theme="dark"] .article-markdown-body h4,
+[data-theme="dark"] .article-markdown-body h5,
+[data-theme="dark"] .article-markdown-body h6 {
+  color: #f5e0dc;
+}
+
+[data-theme="dark"] .article-markdown-body h1,
+[data-theme="dark"] .article-markdown-body h2 {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .article-markdown-body blockquote {
+  background: rgba(137, 180, 250, 0.1);
+  border-left-color: #89b4fa;
+  color: #a6adc8;
+}
+
+[data-theme="dark"] .article-markdown-body th,
+[data-theme="dark"] .article-markdown-body td {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .article-markdown-body th {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .article-markdown-body tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"] .article-markdown-body a {
+  color: #89b4fa;
+}
+
+[data-theme="dark"] .article-markdown-body a:hover {
+  color: #b4befe;
+}
+
+[data-theme="dark"] .article-markdown-body :not(pre) > code {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f38ba8;
+}
+
+[data-theme="dark"] .article-markdown-body hr {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .article-markdown-body table {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .code-block-placeholder {
+  background: #1e1e2e;
+  color: #cdd6f4;
+}
 </style>
