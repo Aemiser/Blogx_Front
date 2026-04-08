@@ -108,6 +108,12 @@ service.interceptors.request.use(
     if (token && !isPublicApi) {
       config.headers['token'] = token
     }
+
+    // 转换 data 中的驼峰为下划线 (articleID -> article_id)
+    if (config.data && typeof config.data === 'object') {
+      config.data = convertKeysToSnakeCase(config.data)
+    }
+    
     return config
   },
   (error) => {
@@ -115,6 +121,22 @@ service.interceptors.request.use(
     return Promise.reject(error)
   }
 )
+
+// 驼峰转下划线
+function convertKeysToSnakeCase(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(item => convertKeysToSnakeCase(item))
+  }
+  if (obj !== null && typeof obj === 'object') {
+    const result: any = {}
+    for (const key in obj) {
+      const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase()
+      result[snakeKey] = convertKeysToSnakeCase(obj[key])
+    }
+    return result
+  }
+  return obj
+}
 
 // 响应拦截器
 service.interceptors.response.use(
