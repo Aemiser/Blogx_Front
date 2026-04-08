@@ -154,7 +154,10 @@ async function fetchImages() {
       page: page.value.toString(), 
       limit: limit.value.toString() 
     })
-    imageList.value = res.data.list || []
+    imageList.value = (res.data.list || []).map((img: any) => ({
+      ...img,
+      id: img.ID || img.id
+    }))
     total.value = res.data.count || 0
   } catch (error) {
     console.error('Failed to fetch images:', error)
