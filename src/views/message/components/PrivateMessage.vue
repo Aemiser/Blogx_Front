@@ -1217,4 +1217,91 @@ onUnmounted(() => {
   opacity: 0;
   transform: translateX(-50%) translateY(-20px);
 }
+
+@media (max-width: $breakpoint-md) {
+  .dm-page {
+    height: auto;
+    min-height: 500px;
+    flex-direction: column;
+    border-radius: $radius-md;
+  }
+  
+  .dm-list {
+    width: 100%;
+    height: 100%;
+    border-right: none;
+    border-bottom: 1px solid $border-light;
+    
+    &--expanded {
+      display: none;
+    }
+  }
+  
+  .dm-list__header {
+    padding: $space-3 $space-4;
+  }
+  
+  .dm-list__search {
+    padding: $space-2 $space-4;
+  }
+  
+  .dm-session {
+    padding: $space-3 $space-4;
+  }
+  
+  .dm-chat {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-card);
+    z-index: 100;
+    
+    &__header {
+      padding: $space-3;
+      flex-wrap: wrap;
+    }
+    
+    &__name {
+      font-size: $text-sm;
+      flex: 1;
+    }
+    
+    &__relation {
+      font-size: 11px;
+    }
+    
+    &__msgs {
+      padding: $space-3;
+      gap: $space-2;
+    }
+    
+    &__back {
+      display: flex;
+    }
+  }
+  
+  .dm-input-main {
+    padding: $space-2 $space-3;
+  }
+  
+  .dm-input {
+    font-size: $text-sm;
+    padding: $space-2 $space-3;
+  }
+  
+  .dm-msg {
+    max-width: 85%;
+    
+    &__bubble {
+      font-size: $text-sm;
+      padding: $space-2 $space-3;
+    }
+  }
+  
+  .emoji-picker {
+    max-height: 200px;
+  }
+}
 </style>

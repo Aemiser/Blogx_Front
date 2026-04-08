@@ -649,4 +649,114 @@ onMounted(() => {
     border-radius: 50%;
   }
 }
+
+@media (max-width: $breakpoint-md) {
+  .message-page {
+    padding: $space-4 0;
+  }
+  
+  .page-title {
+    font-size: $text-xl;
+    margin-bottom: $space-4;
+  }
+  
+  .message-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: $space-2;
+    margin-bottom: $space-4;
+    
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  
+  .tab-btn {
+    padding: $space-2 $space-3;
+    font-size: $text-sm;
+    white-space: nowrap;
+    
+    .badge {
+      min-width: 16px;
+      height: 16px;
+      font-size: 10px;
+    }
+  }
+  
+  .message-list-content {
+    max-height: none;
+  }
+  
+  .ii {
+    padding: $space-3 $space-4;
+    
+    &__left {
+      margin-right: $space-3;
+    }
+    
+    &__title {
+      flex-wrap: wrap;
+    }
+    
+    &__uname {
+      font-size: $text-sm;
+    }
+    
+    &__action {
+      font-size: 11px;
+    }
+    
+    &__msg {
+      font-size: $text-sm;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      white-space: normal;
+    }
+    
+    &__reference {
+      font-size: 11px;
+      padding: $space-2 $space-3;
+    }
+    
+    &__cover {
+      padding: $space-2 $space-3;
+    }
+    
+    &__metadata {
+      flex-wrap: wrap;
+      gap: $space-2;
+    }
+    
+    &__time {
+      font-size: 11px;
+    }
+    
+    &__btn {
+      opacity: 1;
+      font-size: 11px;
+    }
+  }
+  
+  .message-actions {
+    padding: $space-2 $space-3;
+  }
+  
+  .gm {
+    padding: $space-3 $space-4;
+    
+    &__title {
+      font-size: $text-sm;
+    }
+    
+    &__text {
+      font-size: 12px;
+    }
+  }
+  
+  .empty {
+    padding: $space-8;
+  }
+}
 </style>
