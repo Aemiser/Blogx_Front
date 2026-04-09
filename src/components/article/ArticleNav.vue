@@ -33,24 +33,23 @@ const emit = defineEmits<{
 }>()
 
 const handleClick = (index: number) => {
-  emit('update:currentIndex', index)
-  
   const title = props.headings[index]
   if (!title) return
   
-  setTimeout(() => {
+  emit('update:currentIndex', index)
+  
+  requestAnimationFrame(() => {
     const element = document.getElementById(title.id)
     if (element) {
       const headerOffset = 80
-      const elementPosition = element.getBoundingClientRect().top
-      const offsetPosition = elementPosition + window.scrollY - headerOffset
+      const targetPosition = element.getBoundingClientRect().top + window.scrollY - headerOffset
       
       window.scrollTo({
-        top: offsetPosition,
+        top: targetPosition,
         behavior: 'smooth'
       })
     }
-  }, 300)
+  })
 }
 </script>
 

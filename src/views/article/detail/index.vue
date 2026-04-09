@@ -183,15 +183,17 @@ const scrollToHeading = (id: string) => {
   const doScroll = () => {
     const element = document.getElementById(id)
     if (element) {
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
+      const headerOffset = 80
+      const targetPosition = element.getBoundingClientRect().top + window.scrollY - headerOffset
+      
+      window.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth'
       })
     }
   }
   
-  nextTick(doScroll)
-  setTimeout(doScroll, 300)
+  requestAnimationFrame(doScroll)
 }
 
 const onContentRendered = (html: string) => {
