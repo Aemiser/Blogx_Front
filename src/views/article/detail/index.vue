@@ -478,8 +478,9 @@ onMounted(() => {
   color: $text-primary;
   word-wrap: break-word;
 
+  /* 代码块与上一元素间距 */
   :deep(pre) {
-    margin: 0;
+    margin: 24px 0;
     padding: 0px;
     border: 1px solid #30363d;
     background: rgb(40, 44, 52);
@@ -488,6 +489,46 @@ onMounted(() => {
     position: relative;
     width: 100%;
     max-width: 100%;
+  }
+
+  /* 代码块与下一元素间距 */
+  :deep(pre + *),
+  :deep(* + pre) {
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+
+  /* 表格样式 */
+  :deep(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+  }
+
+  :deep(th),
+  :deep(td) {
+    border: 1px solid #e0e0e0;
+    padding: 10px 14px;
+    text-align: left;
+  }
+
+  :deep(th) {
+    background: #f5f5f5;
+    font-weight: 600;
+  }
+
+  :deep(tr:nth-child(even)) {
+    background: #fafafa;
+  }
+
+  /* 表格与代码块间距 */
+  :deep(table + pre),
+  :deep(pre + table),
+  :deep(.md-editor-code + table),
+  :deep(table + .md-editor-code) {
+    margin-top: 24px;
+    margin-bottom: 24px;
   }
 
   :deep(iframe) {
