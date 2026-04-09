@@ -80,6 +80,7 @@
           v-if="article" 
           :headings="tocItems" 
           :current-index="currentTocIndex"
+          :article="article"
           @update:current-index="handleTocChange"
         />
       </aside>

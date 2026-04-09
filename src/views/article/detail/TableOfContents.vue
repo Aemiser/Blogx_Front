@@ -585,6 +585,7 @@ function handleHashChange() {
   margin-bottom: $space-4;
   position: sticky;
   top: $space-4;
+  border: 1px solid $border;
 }
 
 .sidebar-card__title {
@@ -930,6 +931,7 @@ function handleHashChange() {
   .table-of-contents,
   .article-actions-sidebar {
     background: $dark-bg-card;
+    border-color: $dark-border;
   }
 
   .sidebar-card__title {
