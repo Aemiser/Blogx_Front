@@ -22,7 +22,12 @@
               </div>
             </div>
 
-            <div class="article-body markdown-body" v-html="renderedContent"></div>
+            <div class="article-body">
+              <ArticleContent 
+                :content="article.content" 
+                @rendered="onContentRendered"
+              />
+            </div>
           </template>
 
           <div v-else class="empty">
@@ -70,7 +75,13 @@
 
       <aside class="app-content__sidebar desktop-only">
         <ArticleAuthor v-if="article" :author="article" />
-        <TableOfContents v-if="article" :content="article.content" :article="article" />
+        <ArticleNav 
+          v-if="article" 
+          :content="article.content" 
+          :current-index="currentTocIndex"
+          @update:current-index="handleTocChange"
+          @titles-extracted="onTitlesExtracted"
+        />
       </aside>
     </div>
     
@@ -99,12 +110,12 @@
             </div>
             <nav class="mobile-toc-list">
               <a 
-                v-for="item in tocItems" 
+                v-for="(item, index) in tocItems" 
                 :key="item.id"
                 :href="`#${item.id}`"
                 class="toc-item"
-                :class="{ [`toc-level-${item.level}`]: true }"
-                @click="showMobileToc = false"
+                :class="{ active: currentTocIndex === index, [`toc-level-${item.level}`]: true }"
+                @click="showMobileToc = false; scrollToHeading(item.id)"
               >
                 {{ item.text }}
               </a>
@@ -117,25 +128,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import MarkdownIt from 'markdown-it'
-import hljs from 'highlight.js'
-import 'highlight.js/styles/github-dark.css'
-import 'github-markdown-css'
 import type { ArticleDetail, CommentTreeNode } from '@/types'
-import { getArticleDetail, lookArticle } from '@/api/modules/article'
+import { getArticleDetail, lookArticle, diggArticle } from '@/api/modules/article'
 import { getCollectionList } from '@/api/modules/article'
 import { getCommentTree, createComment } from '@/api/modules/comment'
 import { formatNumber, formatRelativeTime, formatDate } from '@/utils'
-import BAvatar from '@/components/base/BAvatar/index.vue'
 import BButton from '@/components/base/BButton/index.vue'
 import EPicker from '@/components/base/EPicker/index.vue'
 import CommentItem from '@/components/comment/CommentItem.vue'
 import ArticleAuthor from './ArticleAuthor.vue'
-import TableOfContents from './TableOfContents.vue'
+import ArticleContent from '@/components/article/ArticleContent.vue'
+import ArticleNav from '@/components/article/ArticleNav.vue'
 import { useUserStore } from '@/stores/user'
 import { toast } from '@/composables/useToast'
+
+interface TocItem {
+  id: string
+  text: string
+  level: number
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -146,113 +159,66 @@ const article = ref<ArticleDetail | null>(null)
 const comments = ref<CommentTreeNode[]>([])
 const commentContent = ref('')
 const submitting = ref(false)
-const articleBodyRef = ref<HTMLElement | null>(null)
 const showCollectDialog = ref(false)
-const collections = ref<Array<{ id: number; title: string; isDefault: boolean }>>([])
+const collections = ref<Array<{ id: number; title: string; isDefault: boolean; ArticleCount?: number }>>([])
 const selectedCollectId = ref(0)
 const showMobileToc = ref(false)
+const tocItems = ref<TocItem[]>([])
+const currentTocIndex = ref(0)
 
-interface TocItem {
-  id: string
-  text: string
-  level: number
+const onTitlesExtracted = (titles: TocItem[]) => {
+  tocItems.value = titles
 }
 
-const tocItems = computed<TocItem[]>(() => {
-  if (!article.value?.content) return []
-  
-  const headingRegex = /^(#{1,6})\s+(.+)$/gm
-  const items: TocItem[] = []
-  let match
-  
-  while ((match = headingRegex.exec(article.value.content)) !== null) {
-    const level = match[1].length
-    const text = match[2]
-    const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '')
-    items.push({ id, text, level })
-  }
-  
-  return items
-})
-
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true,
-  breaks: true,
-  highlight(str: string, lang: string) {
-    const language = lang && hljs.getLanguage(lang) ? lang : 'plaintext'
-    let highlighted: string
-
-    try {
-      if (lang && hljs.getLanguage(lang)) {
-        highlighted = hljs.highlight(str, { language: lang }).value
-      } else {
-        highlighted = hljs.highlightAuto(str).value
-      }
-    } catch (e) {
-      highlighted = md.utils.escapeHtml(str)
-    }
-
-    const escapedText = encodeURIComponent(str)
-
-    // 渲染为带macOS风格头部的高亮代码块
-    const lines = highlighted.split('\n')
-    const codeLines = lines.map(line => `<span class="code-line">${line || ' '}</span>`).join('\n')
-    const codeHtml = `<span class="md-editor-code-block">${codeLines}</span>`
-    const copyBtn = `<button class="md-editor-copy-button" data-code="${escapedText}">复制</button>`
-    const header = `<div class="md-editor-code-header">
-      <div class="md-editor-code-dots">
-        <span class="dot dot--red"></span>
-        <span class="dot dot--yellow"></span>
-        <span class="dot dot--green"></span>
-      </div>
-      <span class="md-editor-code-lang">${language.toUpperCase()}</span>
-      <div class="md-editor-code-actions">${copyBtn}</div>
-    </div>`
-    return `<pre data-line="${lines.length}" class="md-editor-code">${header}<code class="language-${language}" language="${language}"><div style="margin: 24px">${codeHtml}</div></code></pre>`
-  }
-})
-
-// 为标题添加 id 属性
-md.renderer.rules.heading_open = function(tokens, idx) {
-  const token = tokens[idx]
-  const level = token.tag
-  const contentToken = tokens[idx + 1]
-  const text = contentToken.content
-  const id = text
-    .toLowerCase()
-    .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
-    .replace(/^-|-$/g, '')
-  return `<${level} id="${id}">`
+const handleTocChange = (index: number) => {
+  currentTocIndex.value = index
+  scrollToHeading(tocItems.value[index].id)
 }
 
-const renderedContent = computed(() => {
-  if (!article.value?.content) return ''
-  return md.render(article.value.content)
-})
-
-function setupCopyButtons() {
+const scrollToHeading = (id: string) => {
   nextTick(() => {
-    const copyBtns = document.querySelectorAll('.md-editor-copy-button')
-    copyBtns.forEach(btn => {
-      if ((btn as any)._hasListener) return
-          ;(btn as any)._hasListener = true
-
-      btn.addEventListener('click', function(this: HTMLElement) {
-        const code = decodeURIComponent(this.dataset.code || '')
-        navigator.clipboard.writeText(code).then(() => {
-          const originalText = this.textContent
-          this.textContent = '已复制'
-          this.classList.add('copied')
-          setTimeout(() => {
-            this.textContent = originalText
-            this.classList.remove('copied')
-          }, 2000)
-        })
+    const element = document.getElementById(id)
+    if (element) {
+      const headerOffset = 80
+      const elementPosition = element.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.scrollY - headerOffset
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
       })
-    })
+    }
   })
+}
+
+const onContentRendered = (html: string) => {
+  nextTick(() => {
+    updateActiveToc()
+  })
+}
+
+const updateActiveToc = () => {
+  if (tocItems.value.length === 0) return
+  
+  const viewportCenter = window.innerHeight / 3
+  let newIndex = 0
+  
+  for (let i = tocItems.value.length - 1; i >= 0; i--) {
+    const element = document.getElementById(tocItems.value[i].id)
+    if (element) {
+      const rect = element.getBoundingClientRect()
+      if (rect.top <= viewportCenter) {
+        newIndex = i
+        break
+      }
+    }
+  }
+  
+  currentTocIndex.value = newIndex
+}
+
+const handleScroll = () => {
+  updateActiveToc()
 }
 
 async function fetchArticle() {
@@ -277,16 +243,9 @@ async function fetchArticle() {
     console.log('文章详情返回数据:', data)
     console.log('article.id:', article.value.id)
 
-    // 记录浏览
     lookArticle(id).catch(() => {})
 
-    // 获取评论
     fetchComments(id)
-
-    // 设置复制按钮
-    nextTick(() => {
-      setupCopyButtons()
-    })
   } catch (error) {
     console.error('Failed to fetch article:', error)
   } finally {
@@ -325,15 +284,14 @@ async function handleCollect() {
     }
 
     try {
-        // Fetch user's collections
         const res = await getCollectionList({ type: 1, UserID: 0, page: 1, limit: 100 })
         collections.value = (res.data?.list || []).map((item: any) => ({
             id: item.ID || item.id,
             title: item.title,
-            isDefault: item.isDefault
+            isDefault: item.isDefault,
+            ArticleCount: item.ArticleCount
         }))
         
-        // Show the collection selection dialog
         showCollectDialog.value = true
     } catch (error) {
         console.error('Failed to fetch collections:', error)
@@ -373,16 +331,17 @@ function refreshComments() {
   }
 }
 
-function goProfile(id: number) {
-  router.push(`/user/${id}`)
-}
-
 function handleEmojiSelect(emoji: string) {
   commentContent.value += emoji
 }
 
 onMounted(() => {
   fetchArticle()
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>
 
@@ -394,14 +353,13 @@ onMounted(() => {
   display: flex;
   gap: $space-6;
   position: relative;
-  z-index: 2; /* Match top navigation bar z-index */
+  z-index: 2;
 }
 
 &__main {
   flex: 1;
   min-width: 0;
   position: relative;
-  /* Remove z-index from main content */
 }
 
 .app-content__sidebar {
@@ -477,141 +435,6 @@ onMounted(() => {
   line-height: $line-height-relaxed;
   color: $text-primary;
   word-wrap: break-word;
-
-  /* 代码块与上一元素间距 */
-  :deep(pre) {
-    margin: 24px 0;
-    padding: 0px;
-    border: 1px solid #30363d;
-    background: rgb(40, 44, 52);
-    overflow-x: auto;
-    border-radius: 8px;
-    position: relative;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  /* 代码块与下一元素间距 */
-  :deep(pre + *),
-  :deep(* + pre) {
-    margin-top: 24px;
-    margin-bottom: 24px;
-  }
-
-  /* 表格样式 */
-  :deep(table) {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0;
-    font-size: 14px;
-  }
-
-  :deep(th),
-  :deep(td) {
-    border: 1px solid #e0e0e0;
-    padding: 10px 14px;
-    text-align: left;
-  }
-
-  :deep(th) {
-    background: #f5f5f5;
-    font-weight: 600;
-  }
-
-  :deep(tr:nth-child(even)) {
-    background: #fafafa;
-  }
-
-  /* 表格与代码块间距 */
-  :deep(table + pre),
-  :deep(pre + table),
-  :deep(.md-editor-code + table),
-  :deep(table + .md-editor-code) {
-    margin-top: 24px;
-    margin-bottom: 24px;
-  }
-
-  :deep(iframe) {
-    width: 100%;
-    max-width: 100%;
-    border-radius: 8px;
-    border: 1px solid #30363d;
-    margin: 1em 0;
-    aspect-ratio: 16 / 9;
-    height: auto;
-  }
-
-  /* Ensure base text color for code blocks remains readable while preserving syntax highlighting */
-  :deep(pre) code {
-    color: #ffffff;
-  }
-
-  /* Copy button moved into header; keep default flow for now */
-  :deep(pre) .md-editor-copy-button {
-    position: static;
-    margin-left: 8px;
-  }
-
-  :deep(.md-editor-code) {
-    margin: 0;
-    line-height: 1.4;
-  }
-  :deep(.md-editor-code) .code-line {
-    display: block;
-    line-height: inherit;
-  }
-
-  /* Code block header styling - macOS style */
-  :deep(.md-editor-code-header) {
-    display: flex;
-    align-items: center;
-    padding: 8px 12px;
-    font-size: 12px;
-    background: #161b22;
-    border-bottom: 1px solid #30363d;
-    color: #8b949e;
-  }
-  :deep(.md-editor-code-dots) {
-    display: flex;
-    gap: 6px;
-    margin-right: 12px;
-  }
-  :deep(.md-editor-code-dots .dot) {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-  }
-  :deep(.md-editor-code-dots .dot--red) { background: #ff5f56; }
-  :deep(.md-editor-code-dots .dot--yellow) { background: #ffbd2e; }
-  :deep(.md-editor-code-dots .dot--green) { background: #27ca40; }
-  :deep(.md-editor-code-lang) {
-    flex: 1;
-    font-weight: 500;
-    color: #c9d1d9;
-  }
-  :deep(.md-editor-code-actions) {
-    display: flex;
-    align-items: center;
-  }
-  :deep(.md-editor-copy-button) {
-    padding: 4px 10px;
-    background: transparent;
-    border: 1px solid #30363d;
-    border-radius: 4px;
-    color: #8b949e;
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  :deep(.md-editor-copy-button:hover) {
-    background: #21262d;
-    color: #c9d1d9;
-    border-color: #8b949e;
-  }
-  :deep(.md-editor-copy-button.copied) {
-    color: #3fb950;
-    border-color: #3fb950;
-  }
 }
 
 .article-comments {
@@ -708,7 +531,6 @@ onMounted(() => {
     margin-bottom: $space-4;
   }
   
-  /* 移动端目录按钮 */
   .mobile-toc-btn {
     display: flex;
     position: fixed;
@@ -731,7 +553,6 @@ onMounted(() => {
     }
   }
   
-  /* 移动端目录抽屉 */
   .mobile-toc-overlay {
     position: fixed;
     top: 0;
@@ -809,6 +630,11 @@ onMounted(() => {
       padding-left: $space-6;
       font-size: $text-xs;
     }
+    
+    &.active {
+      color: var(--primary);
+      background: rgba(var(--primary-rgb), 0.1);
+    }
   }
   
   .slide-enter-active,
@@ -831,15 +657,6 @@ onMounted(() => {
 }
 
 [data-theme="dark"] {
-  .article-body {
-    color: var(--text-primary);
-
-    :deep(code:not(pre code)) {
-      background: rgba(0, 161, 214, 0.2);
-      color: var(--accent-light);
-    }
-  }
-
   .article-head {
     border-color: var(--border);
   }
