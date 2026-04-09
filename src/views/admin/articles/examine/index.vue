@@ -44,6 +44,7 @@
               <td>
                 <div class="action-buttons">
                   <button class="action-btn" @click="viewArticle(article.id)">查看</button>
+                  <button class="action-btn" @click="editArticle(article.id)">编辑</button>
                   <button 
                     v-if="article.status === 2" 
                     class="action-btn primary" 
@@ -177,6 +178,10 @@ function formatDate(date: string) {
 
 function viewArticle(id: number) {
   router.push(`/article/${id}`)
+}
+
+function editArticle(id: number) {
+  router.push(`/editor?id=${id}`)
 }
 
 async function approveArticle(id: number) {
