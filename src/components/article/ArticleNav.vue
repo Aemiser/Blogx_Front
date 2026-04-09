@@ -389,7 +389,7 @@ function handleShare() {
 
 .toc-item.active {
   color: var(--primary);
-  background: rgba(var(--primary-rgb, 102, 126, 234), 0.1);
+  background: rgba(0, 161, 214, 0.1);
   font-weight: 500;
 }
 
@@ -514,7 +514,7 @@ function handleShare() {
 }
 
 .collection-item.active {
-  background: rgba(var(--primary-rgb, 102, 126, 234), 0.1);
+  background: rgba(0, 161, 214, 0.1);
   border-color: var(--primary);
   color: var(--primary);
 }
