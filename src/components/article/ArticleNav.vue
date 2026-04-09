@@ -17,8 +17,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
-
 interface TitleItem {
   id: string
   text: string
@@ -40,7 +38,7 @@ const handleClick = (index: number) => {
   const title = props.headings[index]
   if (!title) return
   
-  nextTick(() => {
+  setTimeout(() => {
     const element = document.getElementById(title.id)
     if (element) {
       const headerOffset = 80
@@ -52,7 +50,7 @@ const handleClick = (index: number) => {
         behavior: 'smooth'
       })
     }
-  })
+  }, 300)
 }
 </script>
 

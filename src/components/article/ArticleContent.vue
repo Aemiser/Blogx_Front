@@ -40,19 +40,36 @@ const codeTheme = 'atom'
 const addHeadingIds = (container: HTMLElement) => {
   const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6')
   const headingList: { id: string; text: string; level: number }[] = []
+  const usedIds = new Set<string>()
   
-  headings.forEach((heading) => {
+  headings.forEach((heading, index) => {
     const text = heading.textContent?.trim() || ''
     if (!text) return
     
     const level = parseInt(heading.tagName.replace('H', ''))
-    const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '')
     
-    if (!heading.id) {
-      heading.id = id
+    let id = text
+      .toLowerCase()
+      .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 50)
+    
+    if (!id) {
+      id = `heading-${index}`
     }
     
-    headingList.push({ id, text, level })
+    let uniqueId = id
+    let counter = 1
+    while (usedIds.has(uniqueId)) {
+      uniqueId = `${id}-${counter}`
+      counter++
+    }
+    usedIds.add(uniqueId)
+    
+    heading.id = uniqueId
+    heading.style.scrollMarginTop = '100px'
+    
+    headingList.push({ id: uniqueId, text, level })
   })
   
   emit('headingsReady', headingList)
@@ -130,10 +147,29 @@ onMounted(() => {
 :deep(.md-editor-preview pre) {
   margin: 0;
   padding: 16px;
-  border-radius: 8px;
-  background: transparent;
+  border-radius: 0 0 8px 8px;
+  background: transparent !important;
   border: 1px solid var(--border);
   overflow-x: auto;
+}
+
+:deep(.md-editor-preview .md-editor-code-head) {
+  border-radius: 0;
+  background: var(--bg-secondary) !important;
+}
+
+:deep(.md-editor-preview .md-editor-code) {
+  background: transparent !important;
+  border-radius: 0;
+}
+
+:deep(.md-editor-preview .md-editor-code-body) {
+  background: transparent !important;
+}
+
+:deep(.md-editor-preview .ln) {
+  color: var(--text-tertiary) !important;
+  background: transparent !important;
 }
 
 :deep(.md-editor-preview code) {

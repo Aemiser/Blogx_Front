@@ -180,25 +180,37 @@ const handleTocChange = (index: number) => {
 }
 
 const scrollToHeading = (id: string) => {
-  nextTick(() => {
+  const doScroll = () => {
     const element = document.getElementById(id)
     if (element) {
-      const headerOffset = 80
-      const elementPosition = element.getBoundingClientRect().top
-      const offsetPosition = elementPosition + window.scrollY - headerOffset
-      
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
       })
     }
-  })
+  }
+  
+  nextTick(doScroll)
+  setTimeout(doScroll, 300)
 }
 
 const onContentRendered = (html: string) => {
   nextTick(() => {
     updateActiveToc()
   })
+}
+
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+
+const throttle = <T extends (...args: any[]) => any>(fn: T, delay: number) => {
+  let lastTime = 0
+  return (...args: Parameters<T>) => {
+    const now = Date.now()
+    if (now - lastTime >= delay) {
+      lastTime = now
+      fn(...args)
+    }
+  }
 }
 
 const updateActiveToc = () => {
@@ -221,9 +233,7 @@ const updateActiveToc = () => {
   currentTocIndex.value = newIndex
 }
 
-const handleScroll = () => {
-  updateActiveToc()
-}
+const handleScroll = throttle(updateActiveToc, 100)
 
 async function fetchArticle() {
   loading.value = true
