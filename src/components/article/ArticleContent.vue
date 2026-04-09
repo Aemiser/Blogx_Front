@@ -4,7 +4,7 @@
       :editorId="editorId" 
       :modelValue="content"
       :theme="theme"
-      previewTheme="default"
+      previewTheme="github"
       :codeTheme="codeTheme"
       :showCodeRowNumber="false"
       :codeFoldable="false"
