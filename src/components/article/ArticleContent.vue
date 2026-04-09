@@ -7,6 +7,8 @@
       previewTheme="default"
       :codeTheme="codeTheme"
       :showCodeRowNumber="false"
+      :codeFoldable="false"
+      :codeStyleReverse="false"
       class="article-markdown-body"
       @onHtmlChanged="onHtmlChanged"
     />
@@ -80,7 +82,22 @@ const onHtmlChanged = (html: string) => {
     const container = document.querySelector('.md-editor-preview') as HTMLElement
     if (container) {
       addHeadingIds(container)
+      fixCodeBlockStyles()
       emit('rendered', html)
+    }
+  })
+}
+
+const fixCodeBlockStyles = () => {
+  const codeBlocks = document.querySelectorAll('.md-editor-code')
+  codeBlocks.forEach((block) => {
+    const details = block as HTMLElement
+    const summary = details.querySelector('.md-editor-code-head') as HTMLElement
+    if (details) {
+      details.style.background = '#f6f8fa'
+    }
+    if (summary) {
+      summary.style.background = '#ececec'
     }
   })
 }
@@ -90,6 +107,7 @@ watch(() => props.content, () => {
     const container = document.querySelector('.md-editor-preview') as HTMLElement
     if (container) {
       addHeadingIds(container)
+      fixCodeBlockStyles()
       emit('rendered', container.innerHTML)
     }
   })
@@ -100,6 +118,7 @@ onMounted(() => {
     const container = document.querySelector('.md-editor-preview') as HTMLElement
     if (container) {
       addHeadingIds(container)
+      fixCodeBlockStyles()
       emit('rendered', container.innerHTML)
     }
   })
@@ -146,30 +165,10 @@ onMounted(() => {
 
 :deep(.md-editor-preview pre) {
   margin: 0;
-  padding: 16px;
-  border-radius: 0 0 8px 8px;
-  background: transparent !important;
-  border: 1px solid var(--border);
-  overflow-x: auto;
-}
-
-:deep(.md-editor-preview .md-editor-code-head) {
-  border-radius: 0;
-  background: var(--bg-secondary) !important;
-}
-
-:deep(.md-editor-preview .md-editor-code) {
-  background: transparent !important;
-  border-radius: 0;
-}
-
-:deep(.md-editor-preview .md-editor-code-body) {
-  background: transparent !important;
 }
 
 :deep(.md-editor-preview .ln) {
   color: var(--text-tertiary) !important;
-  background: transparent !important;
 }
 
 :deep(.md-editor-preview code) {
