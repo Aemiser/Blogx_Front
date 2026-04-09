@@ -59,6 +59,10 @@ const handleClick = (index: number) => {
   top: 80px;
   max-height: calc(100vh - 120px);
   overflow-y: auto;
+  background: var(--bg-card);
+  border: 1px solid #e1e4e8;
+  border-radius: 12px;
+  padding: 16px;
 }
 
 .sidebar-card__title {
