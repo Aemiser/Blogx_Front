@@ -1,9 +1,9 @@
 <template>
-  <div class="sidebar-card table-of-contents" v-if="titles.length > 0">
+  <div class="sidebar-card table-of-contents" v-if="headings.length > 0">
     <h4 class="sidebar-card__title">目录</h4>
     <nav class="toc-nav">
       <a
-        v-for="(title, index) in titles"
+        v-for="(title, index) in headings"
         :key="title.id"
         class="toc-item"
         :class="[`toc-item--${title.level}`, { active: currentIndex === index }]"
@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 
 interface TitleItem {
   id: string
@@ -26,37 +26,18 @@ interface TitleItem {
 }
 
 const props = defineProps<{
-  content: string
+  headings: TitleItem[]
   currentIndex: number
 }>()
 
 const emit = defineEmits<{
   (e: 'update:currentIndex', index: number): void
-  (e: 'titlesExtracted', titles: TitleItem[]): void
 }>()
-
-const titles = ref<TitleItem[]>([])
-
-const extractTitles = (content: string) => {
-  const headingRegex = /^(#{1,6})\s+(.+)$/gm
-  const items: TitleItem[] = []
-  let match
-  
-  while ((match = headingRegex.exec(content)) !== null) {
-    const level = match[1].length
-    const text = match[2].trim()
-    const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '')
-    items.push({ id, text, level })
-  }
-  
-  titles.value = items
-  emit('titlesExtracted', items)
-}
 
 const handleClick = (index: number) => {
   emit('update:currentIndex', index)
   
-  const title = titles.value[index]
+  const title = props.headings[index]
   if (!title) return
   
   nextTick(() => {
@@ -73,12 +54,6 @@ const handleClick = (index: number) => {
     }
   })
 }
-
-watch(() => props.content, (newContent) => {
-  if (newContent) {
-    extractTitles(newContent)
-  }
-}, { immediate: true })
 </script>
 
 <style scoped>

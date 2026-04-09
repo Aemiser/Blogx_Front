@@ -26,6 +26,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'rendered', html: string): void
+  (e: 'headingsReady', headings: { id: string; text: string; level: number }[]): void
 }>()
 
 const editorId = 'article-preview-' + Math.random().toString(36).slice(2)
@@ -36,16 +37,42 @@ const theme = computed(() => {
 
 const codeTheme = 'atom'
 
+const addHeadingIds = (container: HTMLElement) => {
+  const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6')
+  const headingList: { id: string; text: string; level: number }[] = []
+  
+  headings.forEach((heading) => {
+    const text = heading.textContent?.trim() || ''
+    if (!text) return
+    
+    const level = parseInt(heading.tagName.replace('H', ''))
+    const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '')
+    
+    if (!heading.id) {
+      heading.id = id
+    }
+    
+    headingList.push({ id, text, level })
+  })
+  
+  emit('headingsReady', headingList)
+}
+
 const onHtmlChanged = (html: string) => {
   nextTick(() => {
-    emit('rendered', html)
+    const container = document.querySelector('.md-editor-preview') as HTMLElement
+    if (container) {
+      addHeadingIds(container)
+      emit('rendered', html)
+    }
   })
 }
 
 watch(() => props.content, () => {
   nextTick(() => {
-    const container = document.querySelector('.article-markdown-body') as HTMLElement
+    const container = document.querySelector('.md-editor-preview') as HTMLElement
     if (container) {
+      addHeadingIds(container)
       emit('rendered', container.innerHTML)
     }
   })
@@ -53,8 +80,9 @@ watch(() => props.content, () => {
 
 onMounted(() => {
   nextTick(() => {
-    const container = document.querySelector('.article-markdown-body') as HTMLElement
+    const container = document.querySelector('.md-editor-preview') as HTMLElement
     if (container) {
+      addHeadingIds(container)
       emit('rendered', container.innerHTML)
     }
   })
@@ -100,7 +128,7 @@ onMounted(() => {
 }
 
 :deep(.md-editor-preview pre) {
-  margin: 1em 0;
+  margin: 0;
   padding: 16px;
   border-radius: 8px;
   background: transparent;

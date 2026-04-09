@@ -26,6 +26,7 @@
               <ArticleContent 
                 :content="article.content" 
                 @rendered="onContentRendered"
+                @headings-ready="onHeadingsReady"
               />
             </div>
           </template>
@@ -77,10 +78,9 @@
         <ArticleAuthor v-if="article" :author="article" />
         <ArticleNav 
           v-if="article" 
-          :content="article.content" 
+          :headings="tocItems" 
           :current-index="currentTocIndex"
           @update:current-index="handleTocChange"
-          @titles-extracted="onTitlesExtracted"
         />
       </aside>
     </div>
@@ -168,6 +168,10 @@ const currentTocIndex = ref(0)
 
 const onTitlesExtracted = (titles: TocItem[]) => {
   tocItems.value = titles
+}
+
+const onHeadingsReady = (headings: TocItem[]) => {
+  tocItems.value = headings
 }
 
 const handleTocChange = (index: number) => {
